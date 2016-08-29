@@ -32,9 +32,49 @@ struct TextDetecorParams {
     //max number of CC
     int maxConnComponentNum = 3000;
     //min area of CC
+    int minConnComponentArea = 5;
+    //max area of CC
+    int maxConnComponentArea = 600;
+    
+    float minEccentricity = 0.1;
+    float maxEccentricity = 0.995;
+    float minSolidity = 0.4;
+    float maxStdDevMeanRatio = 0.7;
+    
     
 };
 
+
+
+class TextDetector{
+public:
+    TextDetector(string imgDir = "");
+    TextDetector(TextDetecorParams &params, string imgDir = "");
+    
+    pair<cv::Mat, cv::Rect> applyTo(cv::Mat &image);
+protected:
+    //pre-processing
+    cv::Mat preProcess(cv::Mat &image);
+    //compute the stroke width
+    cv::Mat computeStrokeWidth(cv::Mat &dst);
+    //create MSER mask
+    cv::Mat createMSERMask(cv::Mat &gray);
+    
+    static int toBin(const float angle, const int neighbours = 8);
+    cv::Mat growEdges(cv::Mat &image, cv::Mat &edge);
+    
+    vector<cv::Point> convertToCoordinates(int x, int y , bitset<8> neighbors);
+    vector<cv::Point> convertToCoordinates(cv::Point &point, bitset<8> neighbors);
+    vector<cv::Point> convertToCoordinates(cv::Point &point, uchar neighbors);
+    
+    bitset<8> getMinNeighbors(int *curr_ptr, int x, int *prev_ptr, int *next_ptr);
+    
+    cv::Rect clamp(cv::Rect &rect, cv::Size size);
+    
+private:
+    string imageDirectory;
+    TextDetecorParams Detectorparams;
+};  /*  class TextDetector */
 
 
 
