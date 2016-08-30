@@ -182,13 +182,13 @@ cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
     
     //perform region growing based on the gradient direction
     cv::Mat result = edge.clone();
-    uchar *prev_ptr = result.ptr<uchar>(0);
-    uchar *curr_ptr = result.ptr<uchar>(1);
+    uchar *prev_ptr = result.ptr<uchar>(0);//first row
+    uchar *curr_ptr = result.ptr<uchar>(1);//second row
     
     for (int i = 1; i < edge.rows - 1; i ++) {
         uchar *edge_ptr = edge.ptr<uchar>(i);
         uchar *grad_ptr1 = gradDirection.ptr<uchar>(i);
-        uchar *next_ptr = result.ptr<uchar>(i + 1);
+        uchar *next_ptr = result.ptr<uchar>(i + 1);//third row
         
         for (int j = 1; j < edge.cols - 1; j ++) {
             //only consider the contours
@@ -264,7 +264,7 @@ vector<cv::Point> TextDetector::convertToCoordinates(cv::Point &point, uchar nei
     return convertToCoordinates(point.x, point.y, bitset<8>(neighbors));
 }
 
-//get a set of 8 neighbors that are less than given vaue
+//get a set of 8 neighbors that are less than current vaue
 inline bitset<8> TextDetector::getMinNeighbors(int *curr_ptr, int x, int *prev_ptr, int *next_ptr){
     bitset<8> neighbor;
     neighbor[0] = curr_ptr[x-1] == 0 ? 0 : curr_ptr[x-1] < curr_ptr[x];
@@ -295,16 +295,17 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
         for (int j = 1; j < padded.cols - 1; j ++){
             //extract all the neighbors whicih value < curr_ptr[x], encoded into 8-bit uchar
             if (curr_ptr[j]){
-                lookup_ptr[j] = static_cast<uchar>(getMinNeighbors(curr_ptr, j, prev_ptr, next_ptr).to_ullong());
+                lookup_ptr[j] = static_cast<uchar>(getMinNeighbors(curr_ptr, j, prev_ptr, next_ptr).to_ullong());//convert bitset<8> to decimal with 8-bit uchar type
             }
         }
-            prev_ptr = curr_ptr;
+            prev_ptr = curr_ptr;//next loop
             curr_ptr = next_ptr;
     }
         
         
     //get max stroke width from distance transform
     double max_val_double;
+    //find the local max value
     minMaxLoc(padded, 0, &max_val_double);
     int max_stroke = static_cast<int>(round(max_val_double));
     

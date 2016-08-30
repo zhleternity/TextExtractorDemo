@@ -58,6 +58,7 @@
 		3A23C3291D74184E002505FD /* libopencv_videostab.3.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C2F81D74184E002505FD /* libopencv_videostab.3.1.0.dylib */; };
 		3A23C32A1D74184E002505FD /* libopencv_videostab.3.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C2F91D74184E002505FD /* libopencv_videostab.3.1.0.dylib */; };
 		3A23C32E1D7418A5002505FD /* textDetetcor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A23C32C1D7418A5002505FD /* textDetetcor.cpp */; };
+		3A23C3311D759E50002505FD /* ConnectedComponent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A23C3301D759E50002505FD /* ConnectedComponent.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -127,6 +128,7 @@
 		3A23C32C1D7418A5002505FD /* textDetetcor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = textDetetcor.cpp; sourceTree = "<group>"; };
 		3A23C32D1D7418A5002505FD /* textDetetcor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = textDetetcor.hpp; sourceTree = "<group>"; };
 		3A23C32F1D743482002505FD /* ConnectedComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectedComponent.h; sourceTree = "<group>"; };
+		3A23C3301D759E50002505FD /* ConnectedComponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectedComponent.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +215,7 @@
 				3A23C32C1D7418A5002505FD /* textDetetcor.cpp */,
 				3A23C32D1D7418A5002505FD /* textDetetcor.hpp */,
 				3A23C32F1D743482002505FD /* ConnectedComponent.h */,
+				3A23C3301D759E50002505FD /* ConnectedComponent.cpp */,
 			);
 			path = textExtracorDemo;
 			sourceTree = "<group>";
@@ -331,6 +334,7 @@
 			files = (
 				3A23C32E1D7418A5002505FD /* textDetetcor.cpp in Sources */,
 				3A23C2C31D74179C002505FD /* main.cpp in Sources */,
+				3A23C3311D759E50002505FD /* ConnectedComponent.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
