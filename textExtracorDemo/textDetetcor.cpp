@@ -185,12 +185,12 @@ cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
     uchar *prev_ptr = result.ptr<uchar>(0);
     uchar *curr_ptr = result.ptr<uchar>(1);
     
-    for (int i = 1; i < edge.rows; i ++) {
+    for (int i = 1; i < edge.rows - 1; i ++) {
         uchar *edge_ptr = edge.ptr<uchar>(i);
         uchar *grad_ptr1 = gradDirection.ptr<uchar>(i);
         uchar *next_ptr = result.ptr<uchar>(i + 1);
         
-        for (int j = 1; j < edge.cols; j ++) {
+        for (int j = 1; j < edge.cols - 1; j ++) {
             //only consider the contours
             if(edge_ptr[j] != 0)
             {
@@ -283,7 +283,63 @@ inline bitset<8> TextDetector::getMinNeighbors(int *curr_ptr, int x, int *prev_p
 //It will propagate the max values of each connected component from the ridge to outer boundaries.
 cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
     //pad the distance transform matrix to avoid boundary checking
-    cv::Mat
+    cv::Mat padded(dst.rows + 1, dst.cols + 1, dst.type(), Scalar(0));
+    dst.copyTo(cv::Mat(padded, cv::Rect(1,1,dst.cols,dst.rows)));
+    cv::Mat lookup(padded.size(), CV_8UC1, Scalar(0));
+    int *prev_ptr = padded.ptr<int>(0);//first row
+    int *curr_ptr = padded.ptr<int>(1);// second row
+    
+    for (int i = 1; i < padded.rows - 1; i ++){
+        uchar *lookup_ptr = lookup.ptr<uchar>(i);
+        int *next_ptr = padded.ptr<int>(i+1);//third row
+        for (int j = 1; j < padded.cols - 1; j ++){
+            //extract all the neighbors whicih value < curr_ptr[x], encoded into 8-bit uchar
+            if (curr_ptr[j]){
+                lookup_ptr[j] = static_cast<uchar>(getMinNeighbors(curr_ptr, j, prev_ptr, next_ptr).to_ullong());
+            }
+        }
+            prev_ptr = curr_ptr;
+            curr_ptr = next_ptr;
+    }
+        
+        
+    //get max stroke width from distance transform
+    double max_val_double;
+    minMaxLoc(padded, 0, &max_val_double);
+    int max_stroke = static_cast<int>(round(max_val_double));
+    
+    for (int i = max_stroke; i > 0; i --){
+        cv::Mat stroke_idx_mat;
+        findNonZero(padded == i, stroke_idx_mat);
+        
+        vector<cv::Point> stroke_idx;
+        stroke_idx_mat.copyTo(stroke_idx);
+        
+        vector<cv::Point> neighbors;
+        for (cv::Point &stroke_index : stroke_idx ){
+            vector<cv::Point> tmp = convertToCoordinates(stroke_index, lookup.at<uchar>(stroke_index));
+            neighbors.insert(neighbors.end(), tmp.begin(), tmp.end());
+        }
+        
+        while (! neighbors.empty()){
+            for (cv::Point &neighbor: neighbors){
+                padded.at<int>(neighbor) = i;
+            }
+            
+            neighbors.clear();
+            
+            vector<cv::Point> temp(neighbors);
+            neighbors.clear();
+            
+            //recursively gets b=neighbors of the current neighbors
+            for(cv::Point &pt: temp){
+                vector<cv::Point> tmp = convertToCoordinates(pt, lookup.at<uchar>(pt));
+                neighbors.insert(neighbors.end(), tmp.begin(), tmp.end());
+            }
+        }
+    }
+ 
+    return cv::Mat(padded, cv::Rect(1,1,dst.cols, dst.rows));
 }
                                 
 
