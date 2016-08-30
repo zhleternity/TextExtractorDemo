@@ -60,7 +60,7 @@ protected:
     //create MSER mask
     cv::Mat createMSERMask(cv::Mat &gray);
     
-    static int toBin(const float angle, const int neighbours = 8);
+    static int neighborsEncode(const float angle, const int neighbours = 8);
     cv::Mat growEdges(cv::Mat &image, cv::Mat &edge);
     
     vector<cv::Point> convertToCoordinates(int x, int y , bitset<8> neighbors);

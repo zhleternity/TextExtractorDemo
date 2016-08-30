@@ -153,7 +153,7 @@ cv::Mat TextDetector::createMSERMask(cv::Mat &gray){
 // * | 2 | 3 | 4 |
 //*  | 1 | 0 | 5 |
 //*  | 8 | 7 | 6 |
-int TextDetector::toBin(const float angle, const int neighbors){
+int TextDetector::neighborsEncode(const float angle, const int neighbors){
      const float divisor = 180.0 / neighbors;
      return static_cast<int>(((floor(angle / divisor) - 1) / 2) + 1) % neighbors + 1;
     
@@ -175,7 +175,7 @@ cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
         float *grad_ptr = gradDirection.ptr<float>(i);
         for (int j = 0; j < gradDirection.cols; j ++) {
             if(grad_ptr[j] != 0)
-                grad_ptr[j] = toBin(grad_ptr[j]);
+                grad_ptr[j] = neighborsEncode(grad_ptr[j]);
         }
     }
     gradDirection.convertTo(gradDirection, CV_8UC1);
@@ -229,9 +229,65 @@ cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
         prev_ptr = curr_ptr;
         curr_ptr = next_ptr;
     }
-    return result;    
+    return result;
     
 }
+
+
+//convert encoded 8 bit uchar encoding to the 8 neighbors coordinates
+vector<cv::Point> TextDetector::convertToCoordinates(int x, int y, bitset<8> neighbors){
+    vector<cv::Point> coords;
+    //the current point is (x, y)
+    if( neighbors[0] )
+        coords.push_back( Point(x - 1, y    ) );
+    if( neighbors[1] )
+        coords.push_back( Point(x - 1, y - 1) );
+    if( neighbors[2] )
+        coords.push_back( Point(x    , y - 1) );
+    if( neighbors[3] )
+        coords.push_back( Point(x + 1, y - 1) );
+    if( neighbors[4] )
+        coords.push_back( Point(x + 1, y    ) );
+    if( neighbors[5] )
+        coords.push_back( Point(x + 1, y + 1) );
+    if( neighbors[6] )
+        coords.push_back( Point(x    , y + 1) );
+    if( neighbors[7] )
+        coords.push_back( Point(x - 1, y + 1) );
+    return coords;
+}
+
+vector<cv::Point> TextDetector::convertToCoordinates(cv::Point &point, bitset<8> neighbors){
+    return convertToCoordinates(point.x, point.y, neighbors);
+}
+vector<cv::Point> TextDetector::convertToCoordinates(cv::Point &point, uchar neighbors){
+    return convertToCoordinates(point.x, point.y, bitset<8>(neighbors));
+}
+
+//get a set of 8 neighbors that are less than given vaue
+inline bitset<8> TextDetector::getMinNeighbors(int *curr_ptr, int x, int *prev_ptr, int *next_ptr){
+    bitset<8> neighbor;
+    neighbor[0] = curr_ptr[x-1] == 0 ? 0 : curr_ptr[x-1] < curr_ptr[x];
+    neighbor[1] = prev_ptr[x-1] == 0 ? 0 : prev_ptr[x-1] < curr_ptr[x];
+    neighbor[2] = prev_ptr[x  ] == 0 ? 0 : prev_ptr[x  ] < curr_ptr[x];
+    neighbor[3] = prev_ptr[x+1] == 0 ? 0 : prev_ptr[x+1] < curr_ptr[x];
+    neighbor[4] = curr_ptr[x+1] == 0 ? 0 : curr_ptr[x+1] < curr_ptr[x];
+    neighbor[5] = next_ptr[x+1] == 0 ? 0 : next_ptr[x+1] < curr_ptr[x];
+    neighbor[6] = next_ptr[x  ] == 0 ? 0 : next_ptr[x  ] < curr_ptr[x];
+    neighbor[7] = next_ptr[x-1] == 0 ? 0 : next_ptr[x-1] < curr_ptr[x];
+    return neighbor;
+    
+}
+
+//compute stroke width image out from the distance transform matrix.
+//It will propagate the max values of each connected component from the ridge to outer boundaries.
+cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
+    //pad the distance transform matrix to avoid boundary checking
+    cv::Mat
+}
+                                
+
+
 
 
 
