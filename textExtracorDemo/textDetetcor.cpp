@@ -185,11 +185,51 @@ cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
     uchar *prev_ptr = result.ptr<uchar>(0);
     uchar *curr_ptr = result.ptr<uchar>(1);
     
-    for (int i = 1; i < ; <#increment#>) {
-        <#statements#>
+    for (int i = 1; i < edge.rows; i ++) {
+        uchar *edge_ptr = edge.ptr<uchar>(i);
+        uchar *grad_ptr1 = gradDirection.ptr<uchar>(i);
+        uchar *next_ptr = result.ptr<uchar>(i + 1);
+        
+        for (int j = 1; j < edge.cols; j ++) {
+            //only consider the contours
+            if(edge_ptr[j] != 0)
+            {
+                //switch
+                switch (grad_ptr1[j]) {
+                    case 1:
+                        curr_ptr[j-1] = 255;
+                        break;
+                    case 2:
+                        prev_ptr[j-1] = 255;
+                        break;
+                    case 3:
+                        prev_ptr[j] = 255;
+                        break;
+                    case 4:
+                        prev_ptr[j+1] = 255;
+                        break;
+                    case 5:
+                        curr_ptr[j] = 255;
+                        break;
+                    case 6:
+                        next_ptr[j+1] = 255;
+                        break;
+                    case 7:
+                        next_ptr[j] = 255;
+                        break;
+                    case 8:
+                        next_ptr[j-1] = 255;
+                        break;
+                        
+                    default:
+                        break;
+                }
+            }
+        }
+        prev_ptr = curr_ptr;
+        curr_ptr = next_ptr;
     }
-
-    
+    return result;    
     
 }
 
