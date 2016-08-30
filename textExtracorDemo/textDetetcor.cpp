@@ -113,6 +113,18 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     imshow("morph open", bounidngRegion);
     
     cv::Mat boundingRectCoords;
+    findNonZero(bounidngRegion, boundingRectCoords);
+    cv::Rect boundingRect = cv::boundingRect(boundingRectCoords);
+    cv::Mat bounding_mask(filtered_stroke_width.size(), CV_8UC1, Scalar(0));
+    cv::Mat(bounding_mask, boundingRect) = 255;
+    
+    //add some margin to the bounding rect
+    boundingRect = cv::Rect(boundingRect.tl() - cv::Point(5, 5), boundingRect.br() + cv::Point(5, 5));
+    cv::Mat(bounding_mask, boundingRect) = 255;
+    
+    //discard everything outside of the bounding rectangle
+    filtered_stroke_width.copyTo(filtered_stroke_width, bounding_mask);
+    return pair<cv::Mat, cv::Rect>(filtered_stroke_width, boundingRect);
     
     
     
