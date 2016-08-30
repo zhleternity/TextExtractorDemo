@@ -131,6 +131,24 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
 }
 
 
+cv::Mat TextDetector::createMSERMask(cv::Mat &gray){
+    //find MSER components
+    vector<vector<cv::Point>> contours;
+    vector<cv::Rect> boxes;
+    Ptr<MSER> mser = MSER::create(8, Detectorparams.minMSERArea, Detectorparams.maxMSERArea, 0.25, 0.1, 100, 1.01, 0.03, 5);
+    mser->detectRegions(gray, contours, boxes);
+    
+    //create a binary mask out of the MSER
+    cv::Mat mser_mask(gray.size(), CV_8UC1, Scalar(0));
+    for (int i = 0; i < contours.size(); i ++) {
+        for (cv::Point& point: contours[i])
+            mser_mask.at<uchar>(point) = 255;//use white color for the stable region
+    }
+    
+    return mser_mask;
+}
+
+
 
 
 
