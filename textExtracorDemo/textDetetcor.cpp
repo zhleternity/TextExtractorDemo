@@ -103,7 +103,16 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         
     }
     
+    cv::Mat bounidngRegion;
+    cv::Mat kernel1 = getStructuringElement(MORPH_ELLIPSE, cv::Size(25,25));
+    cv::Mat kernel2 = getStructuringElement(MORPH_ELLIPSE, cv::Size(7,7));
+    morphologyEx(filtered_stroke_width, bounidngRegion, MORPH_CLOSE, kernel1);
+    imshow("morph close", bounidngRegion);
     
+    morphologyEx(bounidngRegion, bounidngRegion, MORPH_OPEN, kernel2);
+    imshow("morph open", bounidngRegion);
+    
+    cv::Mat boundingRectCoords;
     
     
     
