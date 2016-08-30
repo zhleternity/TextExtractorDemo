@@ -149,6 +149,50 @@ cv::Mat TextDetector::createMSERMask(cv::Mat &gray){
 }
 
 
+//convert angle to our neighbor encoding
+// * | 2 | 3 | 4 |
+//*  | 1 | 0 | 5 |
+//*  | 8 | 7 | 6 |
+int TextDetector::toBin(const float angle, const int neighbors){
+     const float divisor = 180.0 / neighbors;
+     return static_cast<int>(((floor(angle / divisor) - 1) / 2) + 1) % neighbors + 1;
+    
+}
+
+cv::Mat TextDetector::growEdges(cv::Mat &image, cv::Mat &edge){
+    CV_Assert(edge.type() == CV_8UC1);
+    cv::Mat gradX, gradY;
+    Sobel(image, gradX, CV_32FC1, 1, 0);
+    Sobel(image, gradY, CV_32FC1, 0, 1);
+    cv::Mat gradMagnitude, gradDirection;
+    cartToPolar(gradX, gradY, gradMagnitude, gradDirection,true);
+    /* Convert the angle into predefined 3x3 neighbor locations
+     | 2 | 3 | 4 |
+     | 1 | 0 | 5 |
+     | 8 | 7 | 6 |
+     */
+    for (int i = 0; i < gradDirection.rows; i ++) {
+        float *grad_ptr = gradDirection.ptr<float>(i);
+        for (int j = 0; j < gradDirection.cols; j ++) {
+            if(grad_ptr[j] != 0)
+                grad_ptr[j] = toBin(grad_ptr[j]);
+        }
+    }
+    gradDirection.convertTo(gradDirection, CV_8UC1);
+    
+    //perform region growing based on the gradient direction
+    cv::Mat result = edge.clone();
+    uchar *prev_ptr = result.ptr<uchar>(0);
+    uchar *curr_ptr = result.ptr<uchar>(1);
+    
+    for (int i = 1; i < ; <#increment#>) {
+        <#statements#>
+    }
+
+    
+    
+}
+
 
 
 
