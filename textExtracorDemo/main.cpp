@@ -89,7 +89,11 @@ int main(int argc, const char * argv[]) {
     //append the original and stroke width images together
     cvtColor(stroke_width, stroke_width, CV_GRAY2BGR);
     cv::Mat append(image.rows, image.cols + stroke_width.cols, CV_8UC3);
-    image.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, stroke));
+    image.copyTo(cv::Mat(append, cv::Rect(0,0, image.cols, image.rows)));
+    stroke_width.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, stroke_width.cols, stroke_width.rows)));
+    
+    imshow("appended", append);
+    waitKey();
     
     
     return 0;
