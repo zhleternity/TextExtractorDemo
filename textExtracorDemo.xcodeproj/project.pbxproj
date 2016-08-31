@@ -59,6 +59,9 @@
 		3A23C32A1D74184E002505FD /* libopencv_videostab.3.1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C2F91D74184E002505FD /* libopencv_videostab.3.1.0.dylib */; };
 		3A23C32E1D7418A5002505FD /* textDetetcor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A23C32C1D7418A5002505FD /* textDetetcor.cpp */; };
 		3A23C3311D759E50002505FD /* ConnectedComponent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3A23C3301D759E50002505FD /* ConnectedComponent.cpp */; };
+		3A23C3351D76B6BA002505FD /* libtesseract.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C3321D76B6BA002505FD /* libtesseract.3.dylib */; };
+		3A23C3361D76B6BA002505FD /* libtesseract.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C3331D76B6BA002505FD /* libtesseract.a */; };
+		3A23C3371D76B6BA002505FD /* libtesseract.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A23C3341D76B6BA002505FD /* libtesseract.3.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -129,6 +132,9 @@
 		3A23C32D1D7418A5002505FD /* textDetetcor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = textDetetcor.hpp; sourceTree = "<group>"; };
 		3A23C32F1D743482002505FD /* ConnectedComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectedComponent.h; sourceTree = "<group>"; };
 		3A23C3301D759E50002505FD /* ConnectedComponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConnectedComponent.cpp; sourceTree = "<group>"; };
+		3A23C3321D76B6BA002505FD /* libtesseract.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtesseract.3.dylib; path = /usr/local/Cellar/tesseract/3.04.01_1/lib/libtesseract.3.dylib; sourceTree = "<absolute>"; };
+		3A23C3331D76B6BA002505FD /* libtesseract.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtesseract.a; path = /usr/local/Cellar/tesseract/3.04.01_1/lib/libtesseract.a; sourceTree = "<absolute>"; };
+		3A23C3341D76B6BA002505FD /* libtesseract.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libtesseract.3.dylib; path = /usr/local/Cellar/tesseract/3.04.01_1/lib/libtesseract.3.dylib; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,6 +142,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3A23C3351D76B6BA002505FD /* libtesseract.3.dylib in Frameworks */,
+				3A23C3361D76B6BA002505FD /* libtesseract.a in Frameworks */,
+				3A23C3371D76B6BA002505FD /* libtesseract.3.dylib in Frameworks */,
 				3A23C2FA1D74184E002505FD /* libopencv_calib3d.3.1.0.dylib in Frameworks */,
 				3A23C2FB1D74184E002505FD /* libopencv_calib3d.3.1.0.dylib in Frameworks */,
 				3A23C2FC1D74184E002505FD /* libopencv_calib3d.3.1.0.dylib in Frameworks */,
@@ -194,6 +203,7 @@
 		3A23C2B61D74179C002505FD = {
 			isa = PBXGroup;
 			children = (
+				3A23C3381D76B6C2002505FD /* TesseractLib */,
 				3A23C32B1D741854002505FD /* OpenCVLib */,
 				3A23C2C11D74179C002505FD /* textExtracorDemo */,
 				3A23C2C01D74179C002505FD /* Products */,
@@ -274,6 +284,16 @@
 				3A23C2F91D74184E002505FD /* libopencv_videostab.3.1.0.dylib */,
 			);
 			name = OpenCVLib;
+			sourceTree = "<group>";
+		};
+		3A23C3381D76B6C2002505FD /* TesseractLib */ = {
+			isa = PBXGroup;
+			children = (
+				3A23C3321D76B6BA002505FD /* libtesseract.3.dylib */,
+				3A23C3331D76B6BA002505FD /* libtesseract.a */,
+				3A23C3341D76B6BA002505FD /* libtesseract.3.dylib */,
+			);
+			name = TesseractLib;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

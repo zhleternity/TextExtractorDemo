@@ -74,7 +74,7 @@ int main(int argc, const char * argv[]) {
     
     
     //show
-    CvFont font = cvFontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
+//    CvFont font = cvFontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
     
 //    CvFont font2 = cvFont(24.0);
     QtFont font2 = fontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
