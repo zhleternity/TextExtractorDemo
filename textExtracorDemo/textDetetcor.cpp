@@ -31,18 +31,25 @@ cv::Mat TextDetector::preProcess(cv::Mat &image){
 pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     cv::Mat gray = preProcess(image);
     imshow("gray image", gray);
+//    waitKey();
+    //use MSER to get MSER region
     cv::Mat mserMask = createMSERMask(gray);
     imshow("mser mask ", mserMask);
-    
+//    waitKey();
+    //use canny to extract edges
     cv::Mat edges;
     Canny(gray, edges, Detectorparams.cannyThresh1, Detectorparams.cannyThresh2);
     imshow("canny image", edges);
+//    waitKey();
     
+    //enhance the mser region using region growth
     cv::Mat edge_mser_bitand = edges & mserMask;
     cv::Mat gradGrowth = growEdges(gray, edge_mser_bitand);
     imshow("grad growth", gradGrowth);
+//    waitKey();
     cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
     imshow("enhance mser", edge_enhanced_mser);
+    waitKey();
     
     if (! imageDirectory.empty()) {
         imwrite( imageDirectory + "/out_grey.png",                   gray );
@@ -56,6 +63,7 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
     cv::Mat labels = CC.apply(edge_enhanced_mser);
     imshow("labels", labels);
+    waitKey();
     vector<ComponentProperty> propertys = CC.getComponentsProperties();
     cv::Mat result(labels.size(), CV_8UC1, Scalar(0));
     for (int i = 0; i < propertys.size(); i ++) {
