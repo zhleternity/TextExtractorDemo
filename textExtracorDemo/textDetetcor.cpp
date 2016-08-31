@@ -49,7 +49,7 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
 //    waitKey();
     cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
     imshow("enhance mser", edge_enhanced_mser);
-    waitKey();
+//    waitKey();
     
     if (! imageDirectory.empty()) {
         imwrite( imageDirectory + "/out_grey.png",                   gray );
@@ -60,10 +60,12 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         imwrite( imageDirectory + "/out_edge_enhanced_mser.png",     edge_enhanced_mser );
     }
     
+    
+    //find CC
     ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
     cv::Mat labels = CC.apply(edge_enhanced_mser);
     imshow("labels", labels);
-    waitKey();
+//    waitKey();
     vector<ComponentProperty> propertys = CC.getComponentsProperties();
     cv::Mat result(labels.size(), CV_8UC1, Scalar(0));
     for (int i = 0; i < propertys.size(); i ++) {
@@ -77,14 +79,15 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
             continue;
         result |= (labels == propertys[i].labelID);
     }
-    
+    //distance transform
     distanceTransform(result, result, CV_DIST_L2, 3);
     result.convertTo(result, CV_32SC1);
     
-    
+    //find stroke width image from the distance transform
     cv::Mat stroke_width = computeStrokeWidth(result);
     imshow("stroke width ", stroke_width);
     
+    //again filter the stroke width by the CC
     ConnectedComponent conn_comp(Detectorparams.maxConnComponentNum, 4);
     labels = conn_comp.apply(stroke_width);
     propertys = conn_comp.getComponentsProperties();
@@ -99,8 +102,8 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         vector<int> nonzero;
         copy_if(reshape.begin(), reshape.end(), back_inserter(nonzero), [&](int value){return value > 0;});
         
+        //get the mean and stddev for each CC
         vector<double> tmp_mean,tmp_stddev;
-        
         meanStdDev(nonzero, tmp_mean, tmp_stddev);
         double mean = tmp_mean[0];
         double stddev = tmp_stddev[0];
@@ -112,13 +115,14 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     }
     
     cv::Mat bounidngRegion;
-    cv::Mat kernel1 = getStructuringElement(MORPH_ELLIPSE, cv::Size(25,25));
+    cv::Mat kernel1 = getStructuringElement(MORPH_ELLIPSE, cv::Size(11,11));
     cv::Mat kernel2 = getStructuringElement(MORPH_ELLIPSE, cv::Size(7,7));
     morphologyEx(filtered_stroke_width, bounidngRegion, MORPH_CLOSE, kernel1);
     imshow("morph close", bounidngRegion);
     
     morphologyEx(bounidngRegion, bounidngRegion, MORPH_OPEN, kernel2);
     imshow("morph open", bounidngRegion);
+//    waitKey();
     
     cv::Mat boundingRectCoords;
     findNonZero(bounidngRegion, boundingRectCoords);
@@ -128,7 +132,7 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     
     //add some margin to the bounding rect
     boundingRect = cv::Rect(boundingRect.tl() - cv::Point(5, 5), boundingRect.br() + cv::Point(5, 5));
-    cv::Mat(bounding_mask, boundingRect) = 255;
+    boundingRect = clamp(boundingRect, image.size());
     
     //discard everything outside of the bounding rectangle
     filtered_stroke_width.copyTo(filtered_stroke_width, bounding_mask);
@@ -136,6 +140,23 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     
     
     
+}
+
+
+//threshold func
+//clamp the bounding regioin rect in specified scope
+cv::Rect TextDetector::clamp(cv::Rect &rect, cv::Size size){
+    cv::Rect result = rect;
+    
+    if(rect.x < 0)
+        result.x = 0;
+    if((result.x + result.width) > size.width)
+        result.width = size.width - result.x;
+    if(result.y < 0)
+        result.y = 0;
+    if((result.y + result.height) > size.height)
+        result.height = size.height - result.y;
+    return result;
 }
 
 
