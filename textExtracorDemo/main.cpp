@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <tesseract/baseapi.h>
+#include <tesseract/strngs.h>
 #include <opencv2/opencv.hpp>
 
 #include "textDetetcor.hpp"
@@ -63,9 +64,10 @@ int main(int argc, const char * argv[]) {
     
     //use Tesseract to decipher the image
     tesseract::TessBaseAPI tessearct_api;
-    tessearct_api.Init(NULL, "chi+eng");
+    tessearct_api.Init(NULL, "chi_sim+eng",tesseract::OEM_DEFAULT);
+    tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
-    string out = string(tessearct_api.GetUNLVText());
+    string out = string(tessearct_api.GetUTF8Text());
     
     //split the string by whitespace
     vector<string> split;
@@ -81,6 +83,7 @@ int main(int argc, const char * argv[]) {
     cv::Point pnt = cv::Point(result.second.br().x + 1, result.second.tl().y);
     for(string &line : split ){
         addText(image, line, pnt, font2);
+        
         pnt.y += 25;
     }
     

@@ -13,6 +13,10 @@
 #include <iostream>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <tesseract/basedir.h>
+#include <tesseract/baseapi.h>
+#include <tesseract/strngs.h>
+#include <<#header#>>
 
 
 using namespace std;
@@ -70,6 +74,7 @@ protected:
     bitset<8> getMinNeighbors(int *curr_ptr, int x, int *prev_ptr, int *next_ptr);
     
     cv::Rect clamp(cv::Rect &rect, cv::Size size);
+    void convertUtf8ToGBK(char **result, char *strUtf8);
     
 private:
     string imageDirectory;
