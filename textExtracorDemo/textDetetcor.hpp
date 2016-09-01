@@ -16,7 +16,7 @@
 #include <tesseract/basedir.h>
 #include <tesseract/baseapi.h>
 #include <tesseract/strngs.h>
-#include <<#header#>>
+#include <leptonica/allheaders.h>
 
 
 using namespace std;

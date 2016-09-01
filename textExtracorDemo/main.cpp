@@ -11,6 +11,7 @@
 #include <tesseract/baseapi.h>
 #include <tesseract/strngs.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/ml.hpp>
 
 #include "textDetetcor.hpp"
 #include "ConnectedComponent.h"
@@ -63,8 +64,13 @@ int main(int argc, const char * argv[]) {
     cv::Mat(result.first, result.second).copyTo(stroke_width);
     
     //use Tesseract to decipher the image
+    double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
-    tessearct_api.Init(NULL, "chi_sim+eng",tesseract::OEM_DEFAULT);
+    int nRet = tessearct_api.Init("tessdata", "chi_sim+eng",tesseract::OEM_DEFAULT);
+    if (nRet != 0) {
+        printf("初始化字库失败！");
+        return -1;
+    }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
     string out = string(tessearct_api.GetUTF8Text());
@@ -86,7 +92,10 @@ int main(int argc, const char * argv[]) {
         
         pnt.y += 25;
     }
-    
+    t = ((double)getTickCount() - t) / getTickFrequency();
+    cout<<"It consumes:"<<t<<"second"<<endl;
+    ml::KNearest *knn;
+//    knn->findNearest(<#InputArray samples#>, <#int k#>, <#OutputArray results#>)
     rectangle(image, result.second, Scalar(0, 255, 0), 2);
     
     //append the original and stroke width images together

@@ -375,7 +375,7 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 
 //convert Utf8 to GBK
 void TextDetector::convertUtf8ToGBK(char **result, char *strUtf8){
-    int length = MultiByteToWideChar(CP_);
+//    int length = MultiByteToWideChar(CP_UTF8, 0, (LPcs));
 }
 
 
