@@ -67,7 +67,8 @@ int main(int argc, const char * argv[]) {
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
     const char  *languagePath = "/usr/local/Cellar/tesseract/3.04.01_2/share/tessdata";
-    int nRet = tessearct_api.Init(languagePath, "chi_sim+eng",tesseract::OEM_DEFAULT);
+    const char *languageType = "eng";
+    int nRet = tessearct_api.Init(languagePath, languageType,tesseract::OEM_DEFAULT);
     if (nRet != 0) {
         printf("初始化字库失败！");
         return -1;
