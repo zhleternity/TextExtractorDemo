@@ -36,7 +36,7 @@ int main(int argc, const char * argv[]) {
 //        }
 //    }
 //    std::cout << "Hello, World!\n";
-    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/py.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/TestText.png");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 1;
@@ -75,7 +75,7 @@ int main(int argc, const char * argv[]) {
     }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
-    string out = string(tessearct_api.GetUNLVText());
+    string out = string(tessearct_api.GetUTF8Text());
     cout<<"the out result :"<<out<<endl;
     //split the string by whitespace
     vector<string> split;
