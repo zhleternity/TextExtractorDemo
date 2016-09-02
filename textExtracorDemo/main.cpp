@@ -36,7 +36,7 @@ int main(int argc, const char * argv[]) {
 //        }
 //    }
 //    std::cout << "Hello, World!\n";
-    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/TestText.png");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/3.png");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 1;
@@ -67,7 +67,7 @@ int main(int argc, const char * argv[]) {
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
     const char  *languagePath = "/usr/local/Cellar/tesseract/3.04.01_2/share/tessdata";
-    const char *languageType = "eng";
+    const char *languageType = "chi_sim";
     int nRet = tessearct_api.Init(languagePath, languageType,tesseract::OEM_DEFAULT);
     if (nRet != 0) {
         printf("初始化字库失败！");
