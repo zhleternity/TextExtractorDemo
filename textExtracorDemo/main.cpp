@@ -66,7 +66,8 @@ int main(int argc, const char * argv[]) {
     //use Tesseract to decipher the image
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
-    int nRet = tessearct_api.Init("tessdata", "chi_sim+eng",tesseract::OEM_DEFAULT);
+    const char  *languagePath = "/usr/local/Cellar/tesseract/3.04.01_2/share/tessdata";
+    int nRet = tessearct_api.Init(languagePath, "chi_sim+eng",tesseract::OEM_DEFAULT);
     if (nRet != 0) {
         printf("初始化字库失败！");
         return -1;
@@ -74,7 +75,7 @@ int main(int argc, const char * argv[]) {
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
     string out = string(tessearct_api.GetUTF8Text());
-    
+    cout<<"the out result :"<<out<<endl;
     //split the string by whitespace
     vector<string> split;
     istringstream iss(out);
