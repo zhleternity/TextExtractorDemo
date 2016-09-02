@@ -47,8 +47,8 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     cv::Mat gradGrowth = growEdges(gray, edge_mser_bitand);
     imshow("grad growth", gradGrowth);
 //    waitKey();
-    cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
-    imshow("enhance mser", edge_enhanced_mser);
+//    cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
+//    imshow("enhance mser", edge_enhanced_mser);
 //    waitKey();
     
     if (! imageDirectory.empty()) {
@@ -57,13 +57,13 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         imwrite( imageDirectory + "/out_canny_edges.png",            edges );
         imwrite( imageDirectory + "/out_edge_mser_intersection.png", edge_mser_bitand );
         imwrite( imageDirectory + "/out_gradient_grown.png",         gradGrowth );
-        imwrite( imageDirectory + "/out_edge_enhanced_mser.png",     edge_enhanced_mser );
+//        imwrite( imageDirectory + "/out_edge_enhanced_mser.png",     edge_enhanced_mser );
     }
     
     
     //find CC
     ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-    cv::Mat labels = CC.apply(edge_enhanced_mser);
+    cv::Mat labels = CC.apply(gradGrowth);//CC.apply(edge_enhanced_mser);
     imshow("labels", labels);
 //    waitKey();
     vector<ComponentProperty> propertys = CC.getComponentsProperties();

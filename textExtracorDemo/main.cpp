@@ -39,7 +39,7 @@ int main(int argc, const char * argv[]) {
 //        }
 //    }
 //    std::cout << "Hello, World!\n";
-    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/3.png");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/remote/test21.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 1;
