@@ -16,6 +16,8 @@
 #include <tesseract/basedir.h>
 #include <tesseract/baseapi.h>
 #include <tesseract/strngs.h>
+#include <tesseract/unichar.h>
+#include <tesseract/unicharset.h>
 #include <leptonica/allheaders.h>
 
 

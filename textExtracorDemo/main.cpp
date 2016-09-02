@@ -10,8 +10,11 @@
 #include <fstream>
 #include <tesseract/baseapi.h>
 #include <tesseract/strngs.h>
+#include <tesseract/unichar.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/ml.hpp>
+#include <string>
+
 
 #include "textDetetcor.hpp"
 #include "ConnectedComponent.h"
@@ -36,7 +39,7 @@ int main(int argc, const char * argv[]) {
 //        }
 //    }
 //    std::cout << "Hello, World!\n";
-    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/1.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/test/textExtracorDemo/3.png");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 1;
@@ -69,7 +72,7 @@ int main(int argc, const char * argv[]) {
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
     const char  *languagePath = "/usr/local/Cellar/tesseract/3.04.01_2/share/tessdata";
-    const char *languageType = "chi";
+    const char *languageType = "chi_sim";
     int nRet = tessearct_api.Init(languagePath, languageType,tesseract::OEM_DEFAULT);
     if (nRet != 0) {
         printf("初始化字库失败！");
@@ -77,27 +80,30 @@ int main(int argc, const char * argv[]) {
     }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
-    PIXA *pixa = pixaRead(img_path);
+//    PIXA *pixa = pixaRead(img_path);
 
-    string out = string(tessearct_api.GetWords((Pixa *)pixa));
+//    string out = string(tessearct_api.GetUTF8Text());
+    
+    string out = string(tessearct_api.GetUTF8Text());
     cout<<"the out result :"<<out<<endl;
+//    tessearct_api.GetUnichar(UNICHAR_ID);
     //split the string by whitespace
-    vector<string> split;
-    istringstream iss(out);
-    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(split));
-    
-    
-    //show
-//    CvFont font = cvFontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
-    
-//    CvFont font2 = cvFont(24.0);
-    QtFont font2 = fontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
-    cv::Point pnt = cv::Point(result.second.br().x + 1, result.second.tl().y);
-    for(string &line : split ){
-        addText(image, line, pnt, font2);
-        
-        pnt.y += 25;
-    }
+//    vector<string> split;
+//    istringstream iss(out);
+//    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(split));
+//    
+//    
+//    //show
+////    CvFont font = cvFontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
+//    
+////    CvFont font2 = cvFont(24.0);
+//    QtFont font2 = fontQt("Helvetica", 24.0, CV_RGB(0, 0, 0));
+//    cv::Point pnt = cv::Point(result.second.br().x + 1, result.second.tl().y);
+//    for(string &line : split ){
+//        addText(image, line, pnt, font2);
+//        
+//        pnt.y += 25;
+//    }
     t = ((double)getTickCount() - t) / getTickFrequency();
     cout<<"It consumes:"<<t<<"second"<<endl;
     ml::KNearest *knn;
