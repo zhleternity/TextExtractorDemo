@@ -62,6 +62,8 @@ int main(int argc, const char * argv[]) {
     //get the candidate text region
     cv::Mat stroke_width(result.second.height, result.second.width, CV_8UC1, Scalar(0));
     cv::Mat(result.first, result.second).copyTo(stroke_width);
+    const char *img_path = "/Users/eternity/Documents/test/textExtracorDemo/out/stroke_width.jpg";
+    imwrite(img_path, stroke_width);
     
     //use Tesseract to decipher the image
     double t = getTickCount();
@@ -75,8 +77,9 @@ int main(int argc, const char * argv[]) {
     }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
-    Pixa **pixa = pixaRead(<#const char *filename#>)
-    string out = string(tessearct_api.GetWords(<#Pixa **pixa#>));
+    PIXA *pixa = pixaRead(img_path);
+
+    string out = string(tessearct_api.GetWords((Pixa *)pixa));
     cout<<"the out result :"<<out<<endl;
     //split the string by whitespace
     vector<string> split;
