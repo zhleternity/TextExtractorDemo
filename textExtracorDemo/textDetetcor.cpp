@@ -372,7 +372,182 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
     return cv::Mat(padded, cv::Rect(1,1,dst.cols, dst.rows));
 }
                                 
+//segment the spine text
+void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
+    cv::Mat spineGray;
+    cvtColor(spineImage, spineGray, CV_RGB2GRAY);
+    cv::Mat spineAhe;
+    adaptiveHistEqual(spineGray, spineAhe, 2.5);
+//    Size spine_gray_sz = spineGray.size();
+    
+    cv::Mat spine_th(spineGray.size(), CV_8UC1, Scalar(0));
+    int window_num = 40;
+    int window_h = spineImage.rows / window_num;
+    int window_w = spineImage.cols;
+    for (int i = 0; i < window_num; i ++) {
+        int cut_from_r = window_h * i;
+        int cut_to_r = window_h * (i+1);
+        cv::Mat window_img;
+        cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
+        getROI(spineImage, window_img, rect);
+        cv::Mat window_img_gray;
+        cvtColor(window_img, window_img_gray, CV_RGB2GRAY);
+        Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
+        double max_local,min_local;
+        minMaxLoc(window_img_gray, &min_local, &max_local);
+        double color_diff = max_local - min_local;
+        double thresh;
+        cv::Mat window_tmp;
+        if (color_diff > 50)
+            thresh = threshold(window_img_gray, window_tmp, 1, 255, THRESH_OTSU);
+        else
+            thresh = 0;
+        cv::Mat seg_window;
+        threshold(window_img_gray, seg_window, thresh, 255, THRESH_BINARY);
+        uchar *first = seg_window.ptr<uchar>(0);
+        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
+        vector<int> cols1,cols2;
+        findKEdge(first, 0, 5, cols1);
+        findKEdge(last , 0, 5, cols2);
+        float max_zero_dist, max_one_dist;
+        if(cols1.empty() || cols2.empty())
+            max_zero_dist = 0.0;
+        else{
+            float avg_right = sum(cols2)[0] / (int)sizeof(cols2);
+            float avg_left  = sum(cols1)[0] / (int)sizeof(cols1);
+            max_zero_dist = avg_right - avg_left;
+        }
+        cols1.clear();
+        cols2.clear();
+        
+        findKEdge(first, 1, 5, cols1);
+        findKEdge(last , 1, 5, cols2);
+        if(cols1.empty() || cols2.empty())
+            max_one_dist = 0;
+        else{
+            float avg_right = sum(cols2)[0] / (int)sizeof(cols2);
+            float avg_left  = sum(cols1)[0] / (int)sizeof(cols1);
+            max_one_dist = avg_right - avg_left;
+        }
+        cv::Mat idx;
+        findNonZero(seg_window, idx);
+        int one_count = (int)idx.total();
+        int zero_count = (int)seg_window.total() - one_count;
+        
+        float one_zero_diff = max_one_dist - max_zero_dist;
+        float  dist_limit = 5;
+        
+        if(one_zero_diff > dist_limit)
+            seg_window = ~ seg_window;
+        else{
+            if(one_zero_diff > -dist_limit && one_count > zero_count)
+                seg_window = ~ seg_window;
+        }
+        
+//        cv::Mat spine_append(spineImage.size(), CV_8UC1, Scalar(0));
+        seg_window.copyTo(cv::Mat( spine_th, rect));
+            
+        
+    }
+    
+    if (removeNoise) {
+        vector<vector<cv::Point>> contours;
+        findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+        
+        ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
+        cv::Mat labels = CC.apply(spine_th);
+        vector<ComponentProperty> props = CC.getComponentsProperties();
+        
+        
+        for (ComponentProperty &prop : props) {
+            int box_width  = prop.boxCC.width;
+            int box_height = prop.boxCC.height;
+            float box_aspect = box_width / box_height;
+            int box_area = prop.area;
+        }
+    }
+    
+    
+    
+}
+
+void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
+    int count = 0;
+    for (int i = 0; i < (int)sizeof(data); i ++) {
+        if(edgeValue == data[i]){
+            if(count != k){
+                count ++;
+                coords.push_back(i);
+            }
+            else if (count == k)
+                break;
+        }
+    }
+    
+}
+
+void TextDetector::adaptiveHistEqual(cv::Mat &src,cv::Mat &dst,double clipLimit)
+{
+    Ptr<cv::CLAHE> clahe = createCLAHE();
+    clahe->setClipLimit(clipLimit);
+    clahe->apply(src, dst);
+}
+
+void TextDetector::perspective(Mat &src, float in_point[8], Mat &dst)
+{
+    float w_a4 = sqrt(pow(in_point[0] - in_point[2], 2) + pow(in_point[1] - in_point[3] ,2 ));
+    float h_a4 = sqrt(pow(in_point[0] - in_point[4], 2) + pow(in_point[1] - in_point[5] ,2));
+    dst = Mat::zeros(h_a4, w_a4, CV_8UC3);
+    
+    
+    
+    // corners of destination image with the sequence [tl, tr, bl, br]
+    vector<Point2f> dst_pts, img_pts;
+    dst_pts.push_back(Point(0, 0));
+    dst_pts.push_back(Point(w_a4 - 1, 0));
+    dst_pts.push_back(Point(0, h_a4 - 1));
+    dst_pts.push_back(Point(w_a4 - 1, h_a4 - 1));
+    
+    // corners of source image with the sequence [tl, tr, bl, br]
+    img_pts.push_back(Point(in_point[0], in_point[1]));
+    img_pts.push_back(Point(in_point[2],in_point[3]));
+    img_pts.push_back(Point(in_point[4],in_point[5]));
+    img_pts.push_back(Point(in_point[6], in_point[7]));
+    
+    
+    // get transformation matrix
+    Mat transmtx = getPerspectiveTransform(img_pts, dst_pts);
+    
+    // apply perspective transformation
+    warpPerspective(src, dst, transmtx, dst.size());
+}
+
+
+void TextDetector::getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect)
+{
+    out = cv::Mat(rect.width, rect.height, CV_8UC3,Scalar(125));
+    vector<cv::Point2f>  quad_pts;
+    //映射到原图上
+    vector<cv::Point2f> pointss;
+    pointss.push_back(rect.tl());
+    pointss.push_back(rect.tl() + cv::Point(rect.width,0));
+    pointss.push_back(rect.tl() + cv::Point(0,rect.height));
+    pointss.push_back(rect.br());
+    
+    //以原点为顶点的矩形
+    quad_pts.push_back(cv::Point2f(0,0));
+    quad_pts.push_back(cv::Point2f(rect.height,0));
+    quad_pts.push_back(cv::Point2f(0,rect.width));
+    quad_pts.push_back(cv::Point2f(rect.height,
+                                   rect.width));
+    
+    //    获取透视变换的变换矩阵
+    cv::Mat transmtx = getPerspectiveTransform(pointss, quad_pts);
+    
+    warpPerspective(src, out, transmtx,out.size());
+    
+}
 
 
 

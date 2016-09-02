@@ -142,10 +142,14 @@ Mat ConnectedComponent::apply( const Mat& image ) {
         /* Find the solidity of the blob from blob area / convex area */
         vector<vector<Point>> contours;
         findContours( blob, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
+        for (int j = 0; j < contours.size(); j ++) {
+            properties[i].boxCC = boundingRect(contours[j]);
+        }
         
         if( !contours.empty() ) {
             vector<vector<Point>> hull(1);
             convexHull( contours[0], hull[0] );
+//            properties[i].boxCC.push_back(boundingRect(contours[0]));
             
             /* ... I hope this is correct ... */
             properties[i].solidity = properties[i].area / contourArea( hull[0] );

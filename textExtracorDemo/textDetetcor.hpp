@@ -77,6 +77,11 @@ protected:
     
     cv::Rect clamp(cv::Rect &rect, cv::Size size);
     void convertUtf8ToGBK(char **result, char *strUtf8);
+    void segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise);
+    void adaptiveHistEqual(cv::Mat &src,cv::Mat &dst,double clipLimit);
+    void perspective(Mat &src, float in_point[8], Mat &dst);
+    void getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect);
+    void findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords);
     
 private:
     string imageDirectory;
