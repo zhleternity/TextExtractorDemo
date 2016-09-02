@@ -47,8 +47,8 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     cv::Mat gradGrowth = growEdges(gray, edge_mser_bitand);
     imshow("grad growth", gradGrowth);
 //    waitKey();
-//    cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
-//    imshow("enhance mser", edge_enhanced_mser);
+    cv::Mat edge_enhanced_mser = ~ gradGrowth & mserMask;
+    imshow("enhance mser", edge_enhanced_mser);
 //    waitKey();
     
     if (! imageDirectory.empty()) {
@@ -57,13 +57,13 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         imwrite( imageDirectory + "/out_canny_edges.png",            edges );
         imwrite( imageDirectory + "/out_edge_mser_intersection.png", edge_mser_bitand );
         imwrite( imageDirectory + "/out_gradient_grown.png",         gradGrowth );
-//        imwrite( imageDirectory + "/out_edge_enhanced_mser.png",     edge_enhanced_mser );
+        imwrite( imageDirectory + "/out_edge_enhanced_mser.png",     edge_enhanced_mser );
     }
     
     
     //find CC
     ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-    cv::Mat labels = CC.apply(gradGrowth);//CC.apply(edge_enhanced_mser);
+    cv::Mat labels = CC.apply(edge_enhanced_mser);
     imshow("labels", labels);
 //    waitKey();
     vector<ComponentProperty> propertys = CC.getComponentsProperties();
@@ -88,7 +88,7 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
     imshow("stroke width ", stroke_width);
     
     //again filter the stroke width by the CC
-    ConnectedComponent conn_comp(Detectorparams.maxConnComponentNum, 4);
+    ConnectedComponent conn_comp(Detectorparams.maxConnComponentNum, 8);
     labels = conn_comp.apply(stroke_width);
     propertys = conn_comp.getComponentsProperties();
     
@@ -114,9 +114,9 @@ pair<cv::Mat, cv::Rect> TextDetector::applyTo(cv::Mat &image){
         
     }
     
-    cv::Mat bounidngRegion;
+    cv::Mat bounidngRegion;//= filtered_stroke_width.clone();
     cv::Mat kernel1 = getStructuringElement(MORPH_ELLIPSE, cv::Size(11,11));
-    cv::Mat kernel2 = getStructuringElement(MORPH_ELLIPSE, cv::Size(7,7));
+    cv::Mat kernel2 = getStructuringElement(MORPH_ELLIPSE, cv::Size(5,5));
     morphologyEx(filtered_stroke_width, bounidngRegion, MORPH_CLOSE, kernel1);
     imshow("morph close", bounidngRegion);
     
@@ -164,7 +164,7 @@ cv::Mat TextDetector::createMSERMask(cv::Mat &gray){
     //find MSER components
     vector<vector<cv::Point>> contours;
     vector<cv::Rect> boxes;
-    Ptr<MSER> mser = MSER::create(8, Detectorparams.minMSERArea, Detectorparams.maxMSERArea, 0.25, 0.1, 100, 1.01, 0.03, 5);
+    Ptr<MSER> mser = MSER::create(8, Detectorparams.minMSERArea, Detectorparams.maxMSERArea, 0.25, 0.1, 100, 1.0, 0.03, 5);
     mser->detectRegions(gray, contours, boxes);
     
     //create a binary mask out of the MSER

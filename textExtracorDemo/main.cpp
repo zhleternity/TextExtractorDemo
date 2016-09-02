@@ -39,22 +39,22 @@ int main(int argc, const char * argv[]) {
 //        }
 //    }
 //    std::cout << "Hello, World!\n";
-    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/remote/test21.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/remote/test38.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
-    params.minMSERArea = 1;
-    params.maxMSERArea = 2000;
-    params.cannyThresh1 = 20;
-    params.cannyThresh2 = 100;
+    params.minMSERArea = 150;
+    params.maxMSERArea = 3500;//2000
+    params.cannyThresh1 = 20;//20
+    params.cannyThresh2 = 100;//100
     
     params.maxConnComponentNum = 3000;
-    params.minConnComponentArea = 5;
-    params.maxConnComponentArea = 600;
+    params.minConnComponentArea = 5;//5
+    params.maxConnComponentArea = 600;//600
     
     params.minEccentricity = 0.1;
     params.maxEccentricity = 0.995;
     params.minSolidity = 0.4;
-    params.maxStdDevMeanRatio = 0.7;
+    params.maxStdDevMeanRatio = 0.85;//0.7
     
     
     string out_save_path = "/Users/eternity/Documents/test/textExtracorDemo/out";
