@@ -144,6 +144,7 @@ Mat ConnectedComponent::apply( const Mat& image ) {
         findContours( blob, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
         for (int j = 0; j < contours.size(); j ++) {
             properties[i].boxCC = boundingRect(contours[j]);
+            properties[i].pixelIdxList = contours[j];
         }
         
         if( !contours.empty() ) {
