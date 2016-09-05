@@ -468,8 +468,9 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             
             for (int i = 0; i < prop.pixelIdxList.size(); i ++) {
                 vector<cv::Point> tmp;
-                if (box_width > spineImage.cols / 1.001) {
-                    tmp = prop.p
+                if (box_width > spineImage.cols / 1.001 || (box_width > spineImage.cols / 1.4 && box_aspect > 5)) {
+                    tmp = prop.pixelIdxList;
+                    spine_th.at<int>(tmp[i].x, tmp[i].y)= 0;
                 }
             }
         }
