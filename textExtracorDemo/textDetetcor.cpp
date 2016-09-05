@@ -466,15 +466,21 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             float box_aspect = box_width / box_height;
             int box_area = prop.area;
             
+            vector<cv::Point> tmp;
+            tmp = prop.pixelIdxList;
+            
             for (int i = 0; i < prop.pixelIdxList.size(); i ++) {
-                vector<cv::Point> tmp;
-                if (box_width > spineImage.cols / 1.001 || (box_width > spineImage.cols / 1.4 && box_aspect > 5)) {
-                    tmp = prop.pixelIdxList;
+                if (box_width > spineImage.cols / 1.001 || (box_width > spineImage.cols / 1.4 && box_aspect > 5)
+                    || (box_height > spineImage.cols / 1.1) || ((box_area < (spineImage.cols/30))^2)
+                    || (box_aspect > 0.5 && box_aspect < 1.7 && (prop.solidity > 0.9))) {
                     spine_th.at<int>(tmp[i].x, tmp[i].y)= 0;
+                    tmp.clear();
                 }
             }
         }
     }
+    segSpine = spine_th;
+    spine_th.release();
     
     
     

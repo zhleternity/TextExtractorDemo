@@ -50,6 +50,9 @@ struct TextDetecorParams {
     
 };
 
+//struct WordsStatus {
+//    <#struct fields#>
+//}stats;
 
 
 class TextDetector{
@@ -82,6 +85,7 @@ protected:
     void perspective(Mat &src, float in_point[8], Mat &dst);
     void getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect);
     void findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords);
+    void findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<vector<int>> &words_status);
     
 private:
     string imageDirectory;
