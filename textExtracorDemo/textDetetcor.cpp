@@ -466,7 +466,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             float box_aspect = box_width / box_height;
             int box_area = prop.area;
             
-            vector<cv::Point> tmp;
+            vector<cv::Point2f> tmp;
             tmp = prop.pixelIdxList;
             
             for (int i = 0; i < prop.pixelIdxList.size(); i ++) {
@@ -484,6 +484,54 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     
     
     
+}
+
+
+//find words
+void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<vector<int> > &words_status){
+    cv::Mat spine_th = seg_spine.clone();
+    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
+    cv::Mat labels = CCs.apply(spine_th);
+    vector<ComponentProperty> props = CCs.getComponentsProperties();
+    int sz = (int)props.size();
+    vector<vector<float>> cc_centers_vec;
+    cv::Mat cc_centers(sz, 2, CV_32F);
+    vector<vector<cv::Point2f>> cc_pixels;
+    for(ComponentProperty &prop : props){
+        vector<float> tmp;
+        tmp.push_back(prop.centroid.x);
+        tmp.push_back(prop.centroid.y);
+        cc_centers_vec.push_back(tmp);
+        tmp.clear();
+        cc_pixels.push_back(prop.pixelIdxList);
+    }
+    
+    cc_centers = cv::Mat(cc_centers_vec);
+    
+    cv::Mat cc_px_dist(sz, sz, CV_8U, Scalar(0));
+    
+    for (int i = 0; i < sz - 1; i ++) {
+        for (int j = i + 1; j < sz; j ++) {
+            int len = (int)cc_pixels[j].size();
+            cv::Mat px_j(len, 2, CV_32F);
+            px_j  = cv::Mat(cc_pixels[j]);
+            int len2 = (int)cc_pixels[i].size();
+            cv::Mat px_i(len2, 2, CV_32F);
+            px_i = cv::Mat(cc_pixels[i]);
+        }
+    }
+    
+    
+    
+}
+
+
+//calculate the minimum Eucledian distance between two sets of pixels
+void TextDetector::min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist){
+    int min_dist = 9999;
+    for (<#initialization#>; <#condition#>; <#increment#>) {
+        <#statements#>
+    }
 }
 
 void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
