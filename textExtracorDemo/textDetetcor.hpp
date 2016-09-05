@@ -53,6 +53,13 @@ struct TextDetecorParams {
 struct WordsStatus {
     vector<int> words;
     int length;
+    vector<int> dist_arr;
+    vector<float> angle_arr;
+    float dist_mean;
+    float dist_std;
+    float angle_mean;
+    float angle_std;
+    
     
 };
 
@@ -91,6 +98,14 @@ protected:
     void min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist);
     int max_array(int *a);
     int min_array(int *a);
+    void cc_angle_mat(cv::Mat &cc_centers, cv::Mat &angle_mat);
+    void getWordsStatus(vector<int> &words, cv::Mat &cc_dist, cv::Mat &cc_angle, WordsStatus &word_stat);
+    void get_dist_arr(vector<int> &word, cv::Mat &dist_mat, vector<int> &dist_array);
+    void get_angle_array(vector<int> &word, cv::Mat &angle_mat, vector<float> &angle_array);
+    void mergeWords(WordsStatus &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, WordsStatus &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang);
+    void word_dist(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, int &dist);
+    void word_dist_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &dist_mat );
+    void word_angle(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, cv::Mat &cc_angle, float &angle );
     
 private:
     string imageDirectory;

@@ -496,13 +496,14 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
     cv::Mat plot_pic(sz, sz, CV_32F, Scalar(0));
+    cv::Mat cc_centers(sz, 2, CV_32F, Scalar(0));
     vector<vector<cv::Point2f>> cc_pixels;
     for(ComponentProperty &prop : props){
         cc_centers_vec.push_back(prop.centroid);
         cc_pixels.push_back(prop.pixelIdxList);
     }
     
-//    cc_centers = cv::Mat(cc_centers_vec);
+    cc_centers = cv::Mat(cc_centers_vec);
     
     cv::Mat cc_px_dist(sz, sz, CV_8U, Scalar(0));
     
@@ -633,11 +634,147 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             }
             
         }
+        cvtColor(labels, w_spine, CV_Lab2BGR);
+        imshow("result words", w_spine);
+        
+    }
+    else if (1 == mergeFlag){//merge words
+        cv::Mat cc_dist = temp;
+        cv::Mat centers;
+        cv::transpose(cc_centers, centers);
+        cv::Mat cc_angles;
+        cc_angle_mat(centers, cc_angles);
+        
+        for (int i = 0; i < words_status.size(); i ++)
+            getWordsStatus(words_status[i].words, cc_dist, cc_angles, words_status[i]);
+        
+        
         
         
     }
-    else if (1 == mergeFlag){
-        
+}
+
+
+void TextDetector::mergeWords(WordsStatus &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, WordsStatus &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang){
+    
+}
+
+//find the distance between two words
+void TextDetector::word_dist(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, int &dist){
+    vector<int> dist_arr;
+    double min;
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[word2.size()-1]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size() -1], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size()-1], word2[word2.size()-1]));
+    minMaxLoc(dist_arr, &min);
+    dist = (int)min;
+}
+
+//returns a matrix specifying the distances between each pair of words
+void TextDetector::word_dist_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &dist_mat ){
+    dist_mat = cv::Mat::zeros((int)words_arr.size(), (int)words_arr.size(), CV_8U);
+    for (int k = 0; k < words_arr.size(); k ++) {
+        for (int l = k+1; l < words_arr.size(); l ++) {
+            vector<int> curr_word1 = words_arr[k];
+            vector<int> curr_word2 = words_arr[l];
+            word_dist(curr_word1, curr_word2, cc_dist, dist_mat.at<int>(k, l));
+        }
+    }
+    cv::Mat transpose;
+    cv::transpose(dist_mat, transpose);
+    dist_mat = dist_mat + transpose;
+    for (int i = 0; i < dist_mat.rows; i ++) {
+        int *data = dist_mat.ptr<int>(i);
+        for (int j = 0; j < dist_mat.cols; j ++) {
+            if(i == j)
+                data[j] = NAN;
+        }
+    }
+    
+}
+
+
+//Find the angle between two words
+void TextDetector::word_angle(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, cv::Mat &cc_angle, float &angle ){
+    vector<int> dist_arr;
+    double min;
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[word2.size()-1]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size() -1], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size()-1], word2[word2.size()-1]));
+    minMaxLoc(dist_arr, &min);
+    int index;
+    for (int i = 0; i < dist_arr.size(); i ++) {
+        if(dist_arr[i] == min)
+        {
+            index = i;
+            break;
+        }
+    }
+    
+    if(1 == index)
+        angle = cc_angle.at<int>(word1[0], word2[0]);
+    else if (2 == index)
+        angle = cc_angle.at<int>(word1[0], word2[word2.size()-1]);
+    else if (3 == index)
+        angle = cc_angle.at<int>(word1[word1.size() -1], word2[0]);
+    else
+        angle = cc_angle.at<int>(word1[word1.size()-1], word2[word2.size()-1]);
+
+}
+
+
+//get words status,return a structure
+void TextDetector::getWordsStatus(vector<int> &words, cv::Mat &cc_dist, cv::Mat &cc_angle, WordsStatus &word_stat){
+    vector<int> curr_dist_arr;
+    get_dist_arr(words, cc_dist, curr_dist_arr);
+    vector<float> curr_angle_arr;
+    get_angle_array(words, cc_angle, curr_angle_arr);
+    
+    word_stat.words  = words;
+    word_stat.length = sizeof(words);
+    word_stat.dist_arr = curr_dist_arr;
+    vector<float> dist_mean, dist_std, angle_mean, angle_std;
+    meanStdDev(curr_dist_arr, dist_mean, dist_std);
+    word_stat.dist_mean = dist_mean[0];
+    word_stat.dist_std = dist_std[0];
+    word_stat.angle_arr = curr_angle_arr;
+    meanStdDev(curr_angle_arr, angle_mean, angle_std);
+    word_stat.angle_mean = angle_mean[0];
+    word_stat.angle_std = angle_std[0];
+    
+    
+}
+
+void TextDetector::get_dist_arr(vector<int> &word, cv::Mat &dist_mat, vector<int> &dist_array){
+    for (int k = 0; k < word.size() - 1; k ++) {
+        int curr_char = word[k];
+        int next_char = word[k+1];
+        dist_array[k] = dist_mat.at<int>(curr_char, next_char);
+    }
+}
+
+void TextDetector::get_angle_array(vector<int> &word, cv::Mat &angle_mat, vector<float> &angle_array){
+    for (int k = 0; k < word.size() - 1; k ++) {
+        int curr_char = word[k];
+        int next_char = word[k+1];
+        angle_array[k] = angle_mat.at<float>(curr_char, next_char);
+    }
+}
+
+//return  a matrix of angle between each two CCs
+void TextDetector::cc_angle_mat(cv::Mat &cc_centers, cv::Mat &angle_mat){
+    angle_mat = cv::Mat::zeros(cc_centers.rows, cc_centers.rows, CV_32F);
+    for (int i = 0; i < cc_centers.rows - 1; i ++) {
+        for (int j = i+1; j < cc_centers.rows; j ++) {
+            Point2f tmp = cv::Point(cc_centers.at<float>(j, 0), cc_centers.at<float>(j, 1)) -
+                                    cv::Point(cc_centers.at<float>(i, 0), cc_centers.at<float>(i, 1));
+            float angle = abs(atan2(tmp.y, tmp.x)) * 180 / CV_PI;
+            if (angle > 90)
+                angle = 180 - angle;
+            angle_mat.at<float>(i, j) = angle;
+        }
     }
 }
 
