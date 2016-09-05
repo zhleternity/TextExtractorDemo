@@ -106,6 +106,8 @@ protected:
     void word_dist(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, int &dist);
     void word_dist_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &dist_mat );
     void word_angle(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, cv::Mat &cc_angle, float &angle );
+    void word_angle_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &cc_angle, cv::Mat &ang_mat );
+    void getMergedWord(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, vector<int> &merged);
     
 private:
     string imageDirectory;

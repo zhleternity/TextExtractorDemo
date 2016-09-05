@@ -655,8 +655,67 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 }
 
 
-void TextDetector::mergeWords(WordsStatus &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, WordsStatus &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang){
+void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, vector<WordsStatus> &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang){
+    vector<vector<int>> words_cell_arr;
+    for (int i = 0; i < src_word_stat.size(); i ++) {
+        words_cell_arr.push_back(src_word_stat[i].words);
+    }
     
+    
+    
+}
+
+//merges word2 and word2 ,and returns the resulting word
+void TextDetector::getMergedWord(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, vector<int> &merged){
+    vector<int> dist_arr;
+    double min;
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[0], word2[word2.size()-1]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size() -1], word2[0]));
+    dist_arr.push_back(cc_dist.at<int>(word1[word1.size()-1], word2[word2.size()-1]));
+    minMaxLoc(dist_arr, &min);
+    int index;
+    for (int i = 0; i < dist_arr.size(); i ++) {
+        if(dist_arr[i] == min)
+        {
+            index = i;
+            break;
+        }
+    }
+    
+    if(1 == index){
+        vector<int> flip_lr;
+        flip(word1, flip_lr, 1);
+        merged = flip_lr;
+        for (int i = 0; i < word2.size(); i ++) {
+            merged.push_back(word2[i]);
+        }
+    }
+        
+    else if (2 == index){
+        merged = word2;
+        for (int i = 0; i < word1.size(); i ++) {
+            merged.push_back(word1[i]);
+        }
+
+        
+    }
+    else if (3 == index){
+        merged = word1;
+        for (int i = 0; i < word2.size(); i ++) {
+            merged.push_back(word2[i]);
+        }
+
+    }
+    else{
+        vector<int> flip_lr;
+        flip(word2, flip_lr, 1);
+        merged = word1;
+        for (int i = 0; i < flip_lr.size(); i ++) {
+            merged.push_back(flip_lr[i]);
+        }
+    }
+
 }
 
 //find the distance between two words
@@ -723,6 +782,30 @@ void TextDetector::word_angle(vector<int> &word1, vector<int> &word2, cv::Mat &c
         angle = cc_angle.at<int>(word1[word1.size()-1], word2[word2.size()-1]);
 
 }
+
+//Returns a matrix specifying the angle between every pair of words
+void TextDetector::word_angle_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &cc_angle, cv::Mat &ang_mat ){
+    ang_mat = cv::Mat::zeros((int)words_arr.size(), (int)words_arr.size(), CV_32F);
+    for (int k = 0; k < words_arr.size() - 1; k ++) {
+        for (int l = k+1; l < words_arr.size(); l ++) {
+            vector<int> curr_word1 = words_arr[k];
+            vector<int> curr_word2 = words_arr[l];
+            word_angle(curr_word1, curr_word2, cc_dist, cc_angle, ang_mat.at<float>(k, l));
+        }
+    }
+    cv::Mat transpose;
+    cv::transpose(ang_mat, transpose);
+    ang_mat = ang_mat + transpose;
+    for (int i = 0; i < ang_mat.rows; i ++) {
+        int *data = ang_mat.ptr<int>(i);
+        for (int j = 0; j < ang_mat.cols; j ++) {
+            if(i == j)
+                data[j] = NAN;
+        }
+    }
+    
+}
+
 
 
 //get words status,return a structure
