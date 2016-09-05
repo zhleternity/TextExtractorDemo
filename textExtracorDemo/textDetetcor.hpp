@@ -87,6 +87,8 @@ protected:
     void findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords);
     void findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<vector<int>> &words_status);
     void min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist);
+    int max_array(int *a);
+    int min_array(int *a);
     
 private:
     string imageDirectory;

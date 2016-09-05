@@ -494,19 +494,15 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     cv::Mat labels = CCs.apply(spine_th);
     vector<ComponentProperty> props = CCs.getComponentsProperties();
     int sz = (int)props.size();
-    vector<vector<float>> cc_centers_vec;
-    cv::Mat cc_centers(sz, 2, CV_32F);
+    vector<Point2f> cc_centers_vec;
+    cv::Mat plot_pic(sz, sz, CV_32F, Scalar(0));
     vector<vector<cv::Point2f>> cc_pixels;
     for(ComponentProperty &prop : props){
-        vector<float> tmp;
-        tmp.push_back(prop.centroid.x);
-        tmp.push_back(prop.centroid.y);
-        cc_centers_vec.push_back(tmp);
-        tmp.clear();
+        cc_centers_vec.push_back(prop.centroid);
         cc_pixels.push_back(prop.pixelIdxList);
     }
     
-    cc_centers = cv::Mat(cc_centers_vec);
+//    cc_centers = cv::Mat(cc_centers_vec);
     
     cv::Mat cc_px_dist(sz, sz, CV_8U, Scalar(0));
     
@@ -516,14 +512,90 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             vector<Point2f> px_j;
             px_j  = cv::Mat(cc_pixels[j]);
 //            int len2 = (int)cc_pixels[i].size();
-            vector<vector<float>> px_i;
+            vector<Point2f> px_i;
             px_i = cv::Mat(cc_pixels[i]);
-            cc_px_dist.at<int>(i, j) = 
+            int dist;
+            min_px_dist(px_i, px_j, dist);
+            cc_px_dist.at<int>(i, j) = dist;
         }
+    }
+    
+    cv::Mat cc_poly_dist = cc_px_dist.clone();
+    cv::Mat transpose;
+    cv::transpose(cc_px_dist, transpose);
+    cc_poly_dist = cc_px_dist + transpose;
+    for (int i = 0; i < cc_poly_dist.rows; i ++) {
+        for (int j = 0; j < cc_poly_dist.cols; j ++) {
+            if( i == j)
+                cc_poly_dist.at<int>(i, j) = NAN;
+        }
+    }
+    cv::Mat temp = cc_poly_dist;
+    cc_poly_dist = temp;
+    
+    int curr_cc = 0;
+//    cv::Mat cc_path(1, sz, CV_8U, Scalar(0));
+    vector<int> cc_path;
+    int k = 0;
+    while (k < sz) {
+        int *data = cc_poly_dist.ptr<int>(curr_cc);
+        int min_value = min_array(data);
+        int next_cc = 0;
+        for (int i = 0; i < sizeof(data); i ++) {
+            if(min_value == data[i]){
+                next_cc = i;
+                break;
+            }
+        }
+        
+        for (int i = 0; i < sz; i ++) {
+            cc_poly_dist.at<int>(curr_cc, i) = NAN;
+            cc_poly_dist.at<int>(i, curr_cc) = NAN;
+            
+        }
+        
+        Point2f pt1,pt2;
+        pt1 = cv::Point2f(cc_centers_vec[curr_cc].x, cc_centers_vec[curr_cc].y);
+        pt2 = cv::Point2f(cc_centers_vec[next_cc].x, cc_centers_vec[next_cc].y);
+        line(plot_pic, pt1, pt2, Scalar(0,0,255));
+        imshow("plot line", plot_pic);
+        cc_path[k] = curr_cc;
+        curr_cc = next_cc;
+        k = k + 1;
+        
+    }
+    cc_path[k] = curr_cc;
+    cc_poly_dist = temp;
+    
+    
+    //split into words
+    float word_en_ratio = 1.6;
+    int word_start = 1;
+    
+    for (int l = 1; l < sz - 1; l ++) {
+        <#statements#>
     }
     
     
     
+    
+    
+    
+}
+
+
+int TextDetector::max_array(int *a)
+{
+    int t=a[0],i;
+    for(i=1;i<10;i++)t=(t>a[i])?t:a[i];
+    return t;
+}
+
+int TextDetector::min_array(int *a)
+{
+    int t=a[0],i;
+    for(i=1;i<10;i++)t=(t<a[i])?t:a[i];
+    return t;
 }
 
 
