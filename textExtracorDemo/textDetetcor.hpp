@@ -86,7 +86,7 @@ protected:
     void getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect);
     void findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords);
     void findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<vector<int>> &words_status);
-    void min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist);
+    void min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist);
     
 private:
     string imageDirectory;

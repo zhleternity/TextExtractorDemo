@@ -512,12 +512,13 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     
     for (int i = 0; i < sz - 1; i ++) {
         for (int j = i + 1; j < sz; j ++) {
-            int len = (int)cc_pixels[j].size();
-            cv::Mat px_j(len, 2, CV_32F);
+//            int len = (int)cc_pixels[j].size();
+            vector<Point2f> px_j;
             px_j  = cv::Mat(cc_pixels[j]);
-            int len2 = (int)cc_pixels[i].size();
-            cv::Mat px_i(len2, 2, CV_32F);
+//            int len2 = (int)cc_pixels[i].size();
+            vector<vector<float>> px_i;
             px_i = cv::Mat(cc_pixels[i]);
+            cc_px_dist.at<int>(i, j) = 
         }
     }
     
@@ -527,11 +528,17 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 
 
 //calculate the minimum Eucledian distance between two sets of pixels
-void TextDetector::min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist){
+void TextDetector::min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist){
     int min_dist = 9999;
-    for (<#initialization#>; <#condition#>; <#increment#>) {
-        <#statements#>
+    for (int i = 0; i < px1.size(); i ++) {
+        for (int j = 0; j < px2.size(); j ++) {
+            int tmp_dist = sqrt( (px1[i].x - px2[j].x)*(px1[i].x - px2[j].x) +
+                                  (px1[i].y - px2[j].y)*(px1[i].y - px2[j].y));
+            if(tmp_dist < min_dist)
+                min_dist = tmp_dist;
+        }
     }
+    dist = min_dist;
 }
 
 void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
