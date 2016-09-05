@@ -488,7 +488,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 
 
 //find words
-void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<vector<int> > &words_status){
+void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<WordsStatus> &words_status){
     cv::Mat spine_th = seg_spine.clone();
     ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
     cv::Mat labels = CCs.apply(spine_th);
@@ -569,18 +569,76 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     
     
     //split into words
-    float word_en_ratio = 1.6;
+    float word_end_ratio = 1.6;
     int word_start = 1;
     
+    vector<int> new_word;
+    vector<vector<int>> words3;
     for (int l = 1; l < sz - 1; l ++) {
-        <#statements#>
+        int curr_cc = cc_path[l];
+        int prev_cc = cc_path[l-1];
+        int next_cc = cc_path[l+1];
+        int dist_to_prev = cc_poly_dist.at<int>(curr_cc, prev_cc);
+        int dist_to_next = cc_poly_dist.at<int>(curr_cc, next_cc);
+        if (dist_to_prev > (dist_to_next * word_end_ratio) ) {
+            if (l - 1 >= word_start) {
+                
+                for (int num = word_start; num < l; num ++) {
+                    new_word.push_back(cc_path[num]);
+                }
+                
+                word_start = l;
+                words3.push_back(new_word);
+                new_word.clear();
+                Point2f curr_center = cc_centers_vec[curr_cc];
+                Point2f prev_center = cc_centers_vec[prev_cc];
+                Point2f middle_point;
+                middle_point = cv::Point2f((curr_center.x + prev_center.x)/2, (curr_center.y + prev_center.y)/2);
+            }
+        }
+        
+        else if (dist_to_next > (dist_to_prev * word_end_ratio)){
+//            vector<int> new_word;
+            for(int num = word_start; num < l+1; num ++){
+                 new_word.push_back(cc_path[num]);
+            }
+            word_start = l+1;
+            words3.push_back(new_word);
+            new_word.clear();
+            Point2f curr_center = cc_centers_vec[curr_cc];
+            Point2f next_center = cc_centers_vec[next_cc];
+            Point2f middle_point;
+            middle_point = cv::Point2f((curr_center.x + next_center.x)/2, (curr_center.y + next_center.y)/2);
+        }
+    
+   }
+    for(int num = word_start; num < sz; num ++){
+        new_word.push_back(cc_path[num]);
     }
+    words3.push_back(new_word);
     
+//    words_status.words = words3;
+//    words_status.length = {};
+//    words_status.dist_array = {};
     
-    
-    
-    
-    
+    if (0 == mergeFlag) {
+        for (int i = 0; i < words3.size(); i ++) {
+            vector<int> curr_word  = words3[i];
+            words_status[i].words  = words3[i];
+            words_status[i].length = (int)words3[i].size();
+            for (int j = 0; j < curr_word.size(); j ++) {
+                int curr_sym = curr_word[j];
+                for (int k = 0; k < cc_pixels[curr_sym].size(); k ++)
+                    labels.at<int>(cc_pixels[curr_sym][k].x, cc_pixels[curr_sym][k].y) = i;
+            }
+            
+        }
+        
+        
+    }
+    else if (1 == mergeFlag){
+        
+    }
 }
 
 
