@@ -660,6 +660,9 @@ void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_c
     for (int i = 0; i < src_word_stat.size(); i ++) {
         words_cell_arr.push_back(src_word_stat[i].words);
     }
+    cv::Mat w_dist_mat, w_angle_mat;
+    word_dist_mat(words_cell_arr, src_cc_dist, w_dist_mat);
+    word_angle_mat(words_cell_arr, src_cc_dist, src_cc_ang, w_angle_mat);
     
     
     
