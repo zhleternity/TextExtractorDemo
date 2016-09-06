@@ -647,6 +647,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         
         for (int i = 0; i < words_status.size(); i ++)
             getWordsStatus(words_status[i].words, cc_dist, cc_angles, words_status[i]);
+        vector<int>
         
         
         
@@ -654,7 +655,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     }
 }
 
-
+//Get a table of word astatus and returns a new table of words after merges all possible words
 void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, vector<WordsStatus> &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang){
     vector<vector<int>> words_cell_arr;
     for (int i = 0; i < src_word_stat.size(); i ++) {
@@ -666,7 +667,19 @@ void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_c
     for (int k = 0; k < src_word_stat.size() - 1; k ++) {
         for (int l = k+1; l < src_word_stat.size(); l ++) {
             if(1 == checkMerge(k, l, src_word_stat, w_dist_mat, w_angle_mat)){
+                vector<int> word1 = src_word_stat[k].words;
+                vector<int> word2 = src_word_stat[l].words;
+                vector<int> word_new;
+                getMergedWord(word1, word2, src_cc_dist, word_new);
+                WordsStatus word_new_stat;
+                getWordsStatus(word_new, src_cc_dist, src_cc_ang, word_new_stat);
+                src_word_stat[k] = word_new_stat;
+                src_word_stat[l] = {};
+                mergeWords(src_word_stat, src_cc_dist, src_cc_ang, dst_word_stat, dst_cc_dist, dst_cc_ang);
                 
+                word1.clear();
+                word2.clear();
+                word_new.clear();
             }
         }
     }
