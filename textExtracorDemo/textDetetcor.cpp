@@ -665,7 +665,9 @@ void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_c
     word_angle_mat(words_cell_arr, src_cc_dist, src_cc_ang, w_angle_mat);
     for (int k = 0; k < src_word_stat.size() - 1; k ++) {
         for (int l = k+1; l < src_word_stat.size(); l ++) {
-            <#statements#>
+            if(1 == checkMerge(k, l, src_word_stat, w_dist_mat, w_angle_mat)){
+                
+            }
         }
     }
     
@@ -721,8 +723,13 @@ int TextDetector::checkMerge(int word1, int word2, vector<WordsStatus> &word_sta
         }
     }
     
-    if (<#condition#>) {
-        <#statements#>
+    if ( ( (angle <= word1_angle_mean + angle_diff && angle >= word1_angle_mean - angle_diff)
+        || (angle <= word2_angle_mean + angle_diff && angle >= word2_angle_mean - angle_diff) )
+        && ( (dist <= word1_dist_mean + dist_factor_1 * word1_dist_mean + std_factor * word1_dist_std
+            && dist >= word1_dist_mean - dist_factor_1 * word1_dist_mean - std_factor * word1_dist_std)
+            || (dist <= word2_dist_mean + dist_factor_2 * word2_dist_mean + std_factor * word2_dist_std
+                && dist >= word2_dist_mean - dist_factor_2 * word2_dist_mean - std_factor * word2_dist_std) ) ) {
+                res = 1;
     }
     return res;
 }

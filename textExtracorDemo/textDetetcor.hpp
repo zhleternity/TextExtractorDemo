@@ -108,6 +108,7 @@ protected:
     void word_angle(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, cv::Mat &cc_angle, float &angle );
     void word_angle_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dist, cv::Mat &cc_angle, cv::Mat &ang_mat );
     void getMergedWord(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, vector<int> &merged);
+    int checkMerge(int word1, int word2, vector<WordsStatus> &word_stat, cv::Mat & dist_mat, cv::Mat & angle_mat);
     
 private:
     string imageDirectory;
