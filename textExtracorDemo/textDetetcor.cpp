@@ -376,27 +376,39 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
     cv::Mat spineGray;
-    cvtColor(spineImage, spineGray, CV_RGB2GRAY);
+    
+    spineImage.convertTo(spineImage, CV_8U);
+    cout<<spineImage.type()<<endl;
+    cvtColor(spineImage, spineGray, CV_BGR2GRAY);
+    imshow("gray source" , spineGray);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", spineImage);
     cv::Mat spineAhe;
     adaptiveHistEqual(spineGray, spineAhe, 2.5);
 //    Size spine_gray_sz = spineGray.size();
     
     cv::Mat spine_th(spineAhe.size(), CV_8UC1, Scalar(0));
     int window_num = 40;
-    int window_h = spineImage.rows / window_num;
+    int window_h = roundf(spineImage.rows / (float)window_num) ;
     int window_w = spineImage.cols;
     for (int i = 6; i < window_num; i ++) {
         int cut_from_r = window_h * i;
         int cut_to_r = window_h * (i+1);
         cv::Mat window_img;
         cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
-//        getROI(spineImage, window_img, rect);
-        grabCut(spineImage, cv::Mat(), rect, cv::Mat(), window_img, 2);
+        cv::Mat mask;
+//        mask.setTo(Scalar::all(GC_PR_FGD));
+        getROI(spineImage, window_img, rect);
+//        grabCut(spineImage, mask, rect, cv::Mat(), window_img, 2);
         imshow("window section", window_img);
-        waitKey();
+//        waitKey();
         cv::Mat window_img_gray;
         cvtColor(window_img, window_img_gray, CV_BGR2GRAY);
-        Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", window_img_gray);
+        Histogrom1D h1;
+        window_img_gray = h1.stretch(window_img_gray, 10);
+//        Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
+        imshow("sharpen", window_img_gray);
+//        waitKey();
         double max_local,min_local;
         minMaxLoc(window_img_gray, &min_local, &max_local);
         double color_diff = max_local - min_local;
@@ -408,6 +420,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             thresh = 0;
         cv::Mat seg_window;
         threshold(window_img_gray, seg_window, thresh, 255, THRESH_BINARY);
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
         uchar *first = seg_window.ptr<uchar>(0);
         uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
         vector<int> cols1,cols2;
@@ -1092,13 +1105,33 @@ void TextDetector::getROI2(cv::Mat &src,cv::Mat &out,cv::Rect rect){
 }
 
 
-
-
-
-
-
-
-
+int TextDetector::WriteData(string fileName, cv::Mat& matData)
+{
+    int retVal = 0;
+    ofstream outFile(fileName.c_str(), ios_base::out);
+    if (!outFile.is_open())
+    {
+        cout << "路径不存在" << endl;
+        retVal = -1;
+        return (retVal);
+    }
+    if (matData.empty())
+    {
+        cout << "Mat为空’" << endl;
+        retVal = 1;
+        return (retVal);
+    }
+    for (int r = 0; r < matData.rows; r++)
+    {
+        for (int c = 0; c < matData.cols; c++)
+        {
+            double data=matData.at<double>(r,c);
+            outFile << data << "\t" ;
+        }
+        outFile << endl;
+    }
+    return (retVal);
+}
 
 
 
