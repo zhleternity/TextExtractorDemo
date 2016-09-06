@@ -381,18 +381,21 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     adaptiveHistEqual(spineGray, spineAhe, 2.5);
 //    Size spine_gray_sz = spineGray.size();
     
-    cv::Mat spine_th(spineGray.size(), CV_8UC1, Scalar(0));
+    cv::Mat spine_th(spineAhe.size(), CV_8UC1, Scalar(0));
     int window_num = 40;
     int window_h = spineImage.rows / window_num;
     int window_w = spineImage.cols;
-    for (int i = 0; i < window_num; i ++) {
+    for (int i = 6; i < window_num; i ++) {
         int cut_from_r = window_h * i;
         int cut_to_r = window_h * (i+1);
         cv::Mat window_img;
         cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
-        getROI(spineImage, window_img, rect);
+//        getROI(spineImage, window_img, rect);
+        grabCut(spineImage, cv::Mat(), rect, cv::Mat(), window_img, 2);
+        imshow("window section", window_img);
+        waitKey();
         cv::Mat window_img_gray;
-        cvtColor(window_img, window_img_gray, CV_RGB2GRAY);
+        cvtColor(window_img, window_img_gray, CV_BGR2GRAY);
         Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
         double max_local,min_local;
         minMaxLoc(window_img_gray, &min_local, &max_local);
@@ -1038,12 +1041,14 @@ void TextDetector::perspective(Mat &src, float in_point[8], Mat &dst)
     
     // apply perspective transformation
     warpPerspective(src, dst, transmtx, dst.size());
+    dst_pts.clear();
+    img_pts.clear();
 }
 
 
 void TextDetector::getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect)
 {
-    out = cv::Mat(rect.width, rect.height, CV_8UC3,Scalar(125));
+    out = cv::Mat(rect.width, rect.height, CV_8UC3,Scalar(255));
     vector<cv::Point2f>  quad_pts;
     //映射到原图上
     vector<cv::Point2f> pointss;
@@ -1066,6 +1071,25 @@ void TextDetector::getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect)
     
 }
 
+void TextDetector::getROI2(cv::Mat &src,cv::Mat &out,cv::Rect rect){
+//    out = cv::Mat(rect.width, rect.height, CV_8UC3,Scalar(255));
+    vector<cv::Point2f>  quad_pts;
+    //映射到原图上
+    vector<cv::Point2f> pointss;
+    float pt[8];
+    pointss.push_back(rect.tl());
+    pointss.push_back(rect.tl() + cv::Point(rect.width,0));
+    pointss.push_back(rect.tl() + cv::Point(0,rect.height));
+    pointss.push_back(rect.br());
+    for (int i = 0; i < sizeof(pt) - 1; i = i + 2) {
+        pt[i] = pointss[i].x;
+        pt[i+1] = pointss[i].y;
+    }
+    
+    pointss.clear();
+    perspective(src, pt, out);
+
+}
 
 
 

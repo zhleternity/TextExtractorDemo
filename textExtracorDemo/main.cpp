@@ -128,7 +128,7 @@ int main(int argc, const char * argv[]) {
 
 int main(int argc, const char * argv[]) {
     
-    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/remote/test38.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/desk/outimages/4/book15.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 150;
@@ -150,16 +150,19 @@ int main(int argc, const char * argv[]) {
     TextDetector detector(params, out_save_path);
 //    pair<cv::Mat, cv::Rect> result = detector.applyTo(image);
 //    imshow("result", result.first);
-    cv::Mat seg_spine;
+    cv::Mat seg_spine = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
     bool removeNois = true;
     detector.segmentText(image, seg_spine, removeNois);
     
     //get the candidate text region
-    cv::Mat stroke_width(result.second.height, result.second.width, CV_8UC1, Scalar(0));
-    cv::Mat(result.first, result.second).copyTo(stroke_width);
-    const char *img_path = "/Users/eternity/Documents/test/textExtracorDemo/out/stroke_width.jpg";
-    imwrite(img_path, stroke_width);
-    
+//    cv::Mat stroke_width(result.second.height, result.second.width, CV_8UC1, Scalar(0));
+//    cv::Mat(result.first, result.second).copyTo(stroke_width);
+//    const char *img_path = "/Users/eternity/Documents/test/textExtracorDemo/out/stroke_width.jpg";
+//    imwrite(img_path, stroke_width);
+    int mergeFlag = 1;
+    cv::Mat w_spine;
+    vector<WordsStatus> words_stat;
+    detector.findWords(seg_spine, mergeFlag, w_spine, words_stat);
     //use Tesseract to decipher the image
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
@@ -171,7 +174,8 @@ int main(int argc, const char * argv[]) {
         return -1;
     }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
-    tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
+    tessearct_api.SetImage(w_spine.data, w_spine.cols, w_spine.rows, 1, w_spine.cols);
+//    tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
     //    PIXA *pixa = pixaRead(img_path);
     
     //    string out = string(tessearct_api.GetUTF8Text());
@@ -200,13 +204,13 @@ int main(int argc, const char * argv[]) {
     cout<<"It consumes:"<<t<<"second"<<endl;
     ml::KNearest *knn;
     //    knn->findNearest(<#InputArray samples#>, <#int k#>, <#OutputArray results#>)
-    rectangle(image, result.second, Scalar(0, 255, 0), 2);
+//    rectangle(image, result.second, Scalar(0, 255, 0), 2);
     
     //append the original and stroke width images together
-    cvtColor(stroke_width, stroke_width, CV_GRAY2BGR);
-    cv::Mat append(image.rows, image.cols + stroke_width.cols, CV_8UC3);
+//    cvtColor(stroke_width, stroke_width, CV_GRAY2BGR);
+    cv::Mat append(image.rows, image.cols + w_spine.cols, CV_8UC3);
     image.copyTo(cv::Mat(append, cv::Rect(0,0, image.cols, image.rows)));
-    stroke_width.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, stroke_width.cols, stroke_width.rows)));
+    w_spine.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, w_spine.cols, w_spine.rows)));
     
     imshow("appended", append);
     waitKey();
