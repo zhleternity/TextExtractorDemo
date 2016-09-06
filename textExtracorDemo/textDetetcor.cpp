@@ -672,6 +672,61 @@ void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_c
     
 }
 
+//Check if two words can be merged.Return 1 if can, otherwise 0.
+int TextDetector::checkMerge(int word1, int word2, vector<WordsStatus> &word_stat, cv::Mat & dist_mat, cv::Mat & angle_mat){
+    int dist = dist_mat.at<int>(word1, word2);
+    float angle = angle_mat.at<float>(word1, word2);
+    
+    float word1_dist_mean  = word_stat[word1].dist_mean;
+    float word2_dist_mean  = word_stat[word2].dist_mean;
+    
+    float word1_dist_std   = word_stat[word1].dist_std;
+    float word2_dist_std   = word_stat[word2].dist_std;
+    
+    float word1_angle_mean = word_stat[word1].angle_mean;
+    float word2_angle_mean = word_stat[word2].angle_mean;
+    
+    float angle_diff = 13.0;
+    float std_factor = 1.6;
+    float dist_factor_1, dist_factor_2;
+    if( 0 == word1_dist_std)
+        dist_factor_1 = 0.6;
+    else
+        dist_factor_1 = 0.0;
+    
+    if(0 == word2_dist_std)
+        dist_factor_2 = 0.6;
+    else
+        dist_factor_2 = 0.0;
+    
+    int res = 0;
+    
+    if (1 == word_stat[word1].length) {
+        if ( angle <= (word2_angle_mean + angle_diff) && angle >= (word2_angle_mean - angle_diff)
+            && dist <= (word2_dist_mean + dist_factor_2 * word2_dist_mean + std_factor * word2_dist_std)
+            && dist >= (word2_dist_mean - dist_factor_2 * word2_dist_mean - std_factor * word2_dist_std) ) {
+            res = 1;
+//            return res;
+        }
+    }
+    
+    if (1 == word_stat[word2].length) {
+        if( angle <= (word1_angle_mean + angle_diff)
+           && angle >= (word1_angle_mean - angle_diff)
+           && dist <= (word1_dist_mean + dist_factor_1 * word1_dist_mean + std_factor *word1_dist_std)
+           && dist >= (word1_dist_mean - dist_factor_1 * word1_dist_mean - std_factor *word1_dist_std) ){
+            res = 1;
+//            return res;
+            
+        }
+    }
+    
+    if (<#condition#>) {
+        <#statements#>
+    }
+    return res;
+}
+
 //merges word2 and word2 ,and returns the resulting word
 void TextDetector::getMergedWord(vector<int> &word1, vector<int> &word2, cv::Mat &cc_dist, vector<int> &merged){
     vector<int> dist_arr;
