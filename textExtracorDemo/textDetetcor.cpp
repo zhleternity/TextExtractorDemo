@@ -647,10 +647,26 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         
         for (int i = 0; i < words_status.size(); i ++)
             getWordsStatus(words_status[i].words, cc_dist, cc_angles, words_status[i]);
-        vector<int>
+        vector<int> words_merged;
+        vector<WordsStatus> merge_word_stat;
+        cv::Mat merge_dist_mat, merge_angle_mat;
+        mergeWords(words_status, cc_dist, cc_angles, merge_word_stat, merge_dist_mat, merge_angle_mat);
+        vector<vector<int>> words;
+        for (int i = 0; i < merge_word_stat.size(); i ++) {
+            words.push_back(merge_word_stat[i].words);
+        }
         
-        
-        
+        for (int k = 0; k < words.size(); k ++) {
+            vector<int> curr_word = words[k];
+            for (int l = 0; curr_word.size(); l ++) {
+                int curr_sym = curr_word[l];
+                for (int num = 0; num < cc_pixels[curr_sym].size(); num ++)
+                    labels.at<int>(cc_pixels[curr_sym][num].x, cc_pixels[curr_sym][num].y) = k;
+                
+            }
+        }
+        cvtColor(labels, w_spine, CV_Lab2BGR);
+        words_status = merge_word_stat;
         
     }
 }
