@@ -377,15 +377,16 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 
     transpose(spineImage, spineImage);
     flip(spineImage, spineImage, 0);
+
     cv::Mat spineGray;
-//    cv::Mat clone = spineImage.clone();
     imshow("source image", spineImage);
+//    cout<<(int)spineImage.at<uchar>(0, 0)<<endl;
+//    WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", spineImage);
 
 
-    cvtColor(spineImage, spineGray, CV_BGR2GRAY);
+    cvtColor(spineImage, spineGray, CV_RGB2GRAY);
     imshow("gray source" , spineGray);
 //    waitKey();
-
     cv::Mat spineAhe;
     adaptiveHistEqual(spineGray, spineAhe, 1.01);
     imshow("ahe", spineAhe);
@@ -406,11 +407,12 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         cv::Rect rect = cv::Rect(cut_from_r, 0, cut_to_r - cut_from_r, window_w);
         getROI(spineGray, window_img, rect);
         imshow("window section", window_img);
-
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", window_img);
         
         sharpenImage(window_img, window_img);
         imshow("sharpen", window_img);
 //        waitKey();
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", window_img);
         double max_local,min_local;
         minMaxLoc(window_img, &min_local, &max_local);
         double color_diff = max_local - min_local;
@@ -420,7 +422,8 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             thresh = threshold(window_img, window_tmp, 1, 255, THRESH_OTSU);
         else
             thresh = 0;
-        cv::Mat seg_window;
+        cout<<thresh<<endl;
+        cv::Mat seg_window(window_img.size(), CV_64F);
 //        threshold(window_img, seg_window, thresh, 255, THRESH_BINARY);
 //        Histogrom1D h1;
 //        seg_window = h1.stretch(window_img, thresh);
@@ -429,7 +432,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 //        seg_window = seg_window == 255;
 //        seg_window = seg_window / 255;
         imshow("seg_window", seg_window);
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
         waitKey();
         int *first = seg_window.ptr<int>(0);
         int *last = seg_window.ptr<int>(seg_window.rows - 1);
@@ -530,9 +533,9 @@ void TextDetector::imgQuantize(cv::Mat &src, cv::Mat &dst, double level){
         uchar *data2 = dst.ptr<uchar>(i);
         for (int j = 0; j < src.cols; j ++) {
             if(data[j] <= level)
-                data2[j] = 255;
+                data2[j] = 1;
             else
-                data2[j] = 0;
+                data2[j] = 2;
                 
         }
     }
@@ -1162,7 +1165,7 @@ int TextDetector::WriteData(string fileName, cv::Mat& matData)
     {
         for (int c = 0; c < matData.cols; c++)
         {
-            double data=matData.at<double>(r,c);
+            double data=(double)matData.at<uchar>(r,c);
             outFile << data << "\t" ;
         }
         outFile << endl;
