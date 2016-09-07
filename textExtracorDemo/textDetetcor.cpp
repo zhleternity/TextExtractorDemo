@@ -375,59 +375,64 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 //segment the spine text
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
+    transpose(spineImage, spineImage);
+    flip(spineImage, spineImage, 0);
     cv::Mat spineGray;
 //    cv::Mat clone = spineImage.clone();
-//    imshow("source image", spineImage);
-//    cout<<spineImage.channels()<<endl;
-//    spineImage.convertTo(spineImage, CV_8U);
-//    cout<<spineImage.type()<<endl;
+    imshow("source image", spineImage);
+
+
     cvtColor(spineImage, spineGray, CV_BGR2GRAY);
-//    imshow("gray source" , spineGray);
+    imshow("gray source" , spineGray);
 //    waitKey();
-//    WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", spineImage);
+
     cv::Mat spineAhe;
-    adaptiveHistEqual(spineGray, spineAhe, 2.5);
+    adaptiveHistEqual(spineGray, spineAhe, 1.01);
+    imshow("ahe", spineAhe);
+    
 //    Size spine_gray_sz = spineGray.size();
     
     
     int window_num = 40;
-    int window_h = roundf(spineImage.rows / (float)window_num) ;
-    int window_w = spineImage.cols;
+    int window_h = roundf(spineImage.cols / (float)window_num) ;
+    int window_w = spineImage.rows;
     
-    cv::Mat spine_th(window_h * window_num, window_w, CV_8UC1, Scalar(0));
+    cv::Mat spine_th(window_w,window_h * window_num, CV_8UC1, Scalar(0));
     
-    for (int i = 6; i < window_num; i ++) {
+    for (int i = 4; i < window_num; i ++) {
         int cut_from_r = window_h * i;
         int cut_to_r = window_h * (i+1);
         cv::Mat window_img;//(cut_to_r-cut_from_r, window_w, CV_8U,Scalar(0));
-        cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
-        getROI(spineImage, window_img, rect);
-//        cv::Mat window_img = cv::Mat(spineImage,rect);
-//        grabCut(spineImage, mask, rect, cv::Mat(), window_img, 2);
+        cv::Rect rect = cv::Rect(cut_from_r, 0, cut_to_r - cut_from_r, window_w);
+        getROI(spineGray, window_img, rect);
         imshow("window section", window_img);
-//        waitKey();
-        cv::Mat window_img_gray;
-        cvtColor(window_img, window_img_gray, CV_BGR2GRAY);
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", window_img_gray);
-        Histogrom1D h1;
-        window_img_gray = h1.stretch(window_img_gray, 10);
-//        Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
-        imshow("sharpen", window_img_gray);
+
+        
+        sharpenImage(window_img, window_img);
+        imshow("sharpen", window_img);
 //        waitKey();
         double max_local,min_local;
-        minMaxLoc(window_img_gray, &min_local, &max_local);
+        minMaxLoc(window_img, &min_local, &max_local);
         double color_diff = max_local - min_local;
         double thresh;
         cv::Mat window_tmp;
         if (color_diff > 50)
-            thresh = threshold(window_img_gray, window_tmp, 1, 255, THRESH_OTSU);
+            thresh = threshold(window_img, window_tmp, 1, 255, THRESH_OTSU);
         else
             thresh = 0;
         cv::Mat seg_window;
-        threshold(window_img_gray, seg_window, thresh, 255, THRESH_BINARY);
+//        threshold(window_img, seg_window, thresh, 255, THRESH_BINARY);
+//        Histogrom1D h1;
+//        seg_window = h1.stretch(window_img, thresh);
+        imgQuantize(window_img, seg_window, thresh);
         WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
-        uchar *first = seg_window.ptr<uchar>(0);
-        uchar *last = seg_window.ptr<uchar>(seg_window.cols - 1);
+//        seg_window = seg_window == 255;
+//        seg_window = seg_window / 255;
+        imshow("seg_window", seg_window);
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
+        waitKey();
+        int *first = seg_window.ptr<int>(0);
+        int *last = seg_window.ptr<int>(seg_window.rows - 1);
         vector<int> cols1,cols2;
         findKEdge(first, 0, 5, cols1);
         findKEdge(last , 0, 5, cols2);
@@ -451,6 +456,8 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             float avg_left  = sum(cols1)[0] / (int)sizeof(cols1);
             max_one_dist = avg_right - avg_left;
         }
+        cols1.clear();
+        cols2.clear();
         cv::Mat idx;
         findNonZero(seg_window, idx);
         int one_count = (int)idx.total();
@@ -468,17 +475,21 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         
 //        cv::Mat spine_append(spineImage.size(), CV_8UC1, Scalar(0));
         seg_window.copyTo(cv::Mat( spine_th, rect));
-            
+//        imshow("spine_th", spine_th);
+//        waitKey();
+        
         
     }
     
     if (removeNoise) {
         vector<vector<cv::Point>> contours;
+        imshow("spine_th", spine_th);
+        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
         
         
         ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-        cv::Mat labels = CC.apply(spineGray);
+        cv::Mat labels = CC.apply(spine_th);
         vector<ComponentProperty> props = CC.getComponentsProperties();
         
 //        connectedComponents(spine_th, labels);
@@ -509,6 +520,22 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     spine_th.release();
     
     
+    
+}
+
+void TextDetector::imgQuantize(cv::Mat &src, cv::Mat &dst, double level){
+    dst = cv::Mat::zeros(src.rows, src.cols, CV_8U);
+    for (int i = 0; i < src.rows; i ++) {
+        uchar *data = src.ptr<uchar>(i);
+        uchar *data2 = dst.ptr<uchar>(i);
+        for (int j = 0; j < src.cols; j ++) {
+            if(data[j] <= level)
+                data2[j] = 255;
+            else
+                data2[j] = 0;
+                
+        }
+    }
     
 }
 
@@ -1015,7 +1042,7 @@ void TextDetector::min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &
     dist = min_dist;
 }
 
-void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
+void TextDetector::findKEdge(int *data, int edgeValue,int k,vector<int> &coords){
     int count = 0;
     for (int i = 0; i < (int)sizeof(data); i ++) {
         if(edgeValue == data[i]){
@@ -1145,7 +1172,21 @@ int TextDetector::WriteData(string fileName, cv::Mat& matData)
 
 
 
+void TextDetector::sharpenImage(const cv::Mat &image, cv::Mat &result)
+{
+    //创建并初始化滤波模板
+    cv::Mat kernel(3,3,CV_32F,cv::Scalar(0));
+    kernel.at<float>(1,1) = 5.0;
+    kernel.at<float>(0,1) = -1.0;
+    kernel.at<float>(1,0) = -1.0;
+    kernel.at<float>(1,2) = -1.0;
+    kernel.at<float>(2,1) = -1.0;
 
+    result.create(image.size(),image.type());
+
+    //对图像进行滤波
+    cv::filter2D(image,result,image.depth(),kernel);
+}
 
 
 
