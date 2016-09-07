@@ -376,20 +376,25 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
     cv::Mat spineGray;
+    imshow("source image", spineImage);
     
-    spineImage.convertTo(spineImage, CV_8U);
-    cout<<spineImage.type()<<endl;
+//    spineImage.convertTo(spineImage, CV_8U);
+//    cout<<spineImage.type()<<endl;
     cvtColor(spineImage, spineGray, CV_BGR2GRAY);
     imshow("gray source" , spineGray);
-    WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", spineImage);
+//    waitKey();
+//    WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", spineImage);
     cv::Mat spineAhe;
     adaptiveHistEqual(spineGray, spineAhe, 2.5);
 //    Size spine_gray_sz = spineGray.size();
     
-    cv::Mat spine_th(spineAhe.size(), CV_8UC1, Scalar(0));
+    
     int window_num = 40;
     int window_h = roundf(spineImage.rows / (float)window_num) ;
     int window_w = spineImage.cols;
+    
+    cv::Mat spine_th(window_h * window_num, window_w, CV_8UC1, Scalar(0));
+    
     for (int i = 6; i < window_num; i ++) {
         int cut_from_r = window_h * i;
         int cut_to_r = window_h * (i+1);
@@ -403,7 +408,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 //        waitKey();
         cv::Mat window_img_gray;
         cvtColor(window_img, window_img_gray, CV_BGR2GRAY);
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", window_img_gray);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", window_img_gray);
         Histogrom1D h1;
         window_img_gray = h1.stretch(window_img_gray, 10);
 //        Laplacian(window_img_gray, window_img_gray, window_img_gray.depth());
@@ -420,9 +425,9 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             thresh = 0;
         cv::Mat seg_window;
         threshold(window_img_gray, seg_window, thresh, 255, THRESH_BINARY);
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
         uchar *first = seg_window.ptr<uchar>(0);
-        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
+        uchar *last = seg_window.ptr<uchar>(seg_window.cols - 1);
         vector<int> cols1,cols2;
         findKEdge(first, 0, 5, cols1);
         findKEdge(last , 0, 5, cols2);
@@ -437,8 +442,8 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         cols1.clear();
         cols2.clear();
         
-        findKEdge(first, 1, 5, cols1);
-        findKEdge(last , 1, 5, cols2);
+        findKEdge(first, 255, 5, cols1);
+        findKEdge(last , 255, 5, cols2);
         if(cols1.empty() || cols2.empty())
             max_one_dist = 0;
         else{
