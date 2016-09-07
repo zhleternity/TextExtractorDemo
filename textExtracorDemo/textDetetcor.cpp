@@ -376,12 +376,13 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
     cv::Mat spineGray;
-    imshow("source image", spineImage);
-    
+//    cv::Mat clone = spineImage.clone();
+//    imshow("source image", spineImage);
+//    cout<<spineImage.channels()<<endl;
 //    spineImage.convertTo(spineImage, CV_8U);
 //    cout<<spineImage.type()<<endl;
     cvtColor(spineImage, spineGray, CV_BGR2GRAY);
-    imshow("gray source" , spineGray);
+//    imshow("gray source" , spineGray);
 //    waitKey();
 //    WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", spineImage);
     cv::Mat spineAhe;
@@ -398,11 +399,10 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     for (int i = 6; i < window_num; i ++) {
         int cut_from_r = window_h * i;
         int cut_to_r = window_h * (i+1);
-        cv::Mat window_img;
+        cv::Mat window_img;//(cut_to_r-cut_from_r, window_w, CV_8U,Scalar(0));
         cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
-        cv::Mat mask;
-//        mask.setTo(Scalar::all(GC_PR_FGD));
         getROI(spineImage, window_img, rect);
+//        cv::Mat window_img = cv::Mat(spineImage,rect);
 //        grabCut(spineImage, mask, rect, cv::Mat(), window_img, 2);
         imshow("window section", window_img);
 //        waitKey();
@@ -476,9 +476,14 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         vector<vector<cv::Point>> contours;
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
         
+        
         ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-        cv::Mat labels = CC.apply(spine_th);
+        cv::Mat labels = CC.apply(spineGray);
         vector<ComponentProperty> props = CC.getComponentsProperties();
+        
+//        connectedComponents(spine_th, labels);
+//        cv::Mat stats, centroids;
+//        connectedComponentsWithStats(spine_th, labels, stats, centroids);
         
         
         for (ComponentProperty &prop : props) {
