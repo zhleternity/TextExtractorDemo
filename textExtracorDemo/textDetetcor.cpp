@@ -412,7 +412,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         sharpenImage(window_img, window_img);
         imshow("sharpen", window_img);
 //        waitKey();
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", window_img);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", window_img);
         double max_local,min_local;
         minMaxLoc(window_img, &min_local, &max_local);
         double color_diff = max_local - min_local;
@@ -428,14 +428,16 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 //        Histogrom1D h1;
 //        seg_window = h1.stretch(window_img, thresh);
         imgQuantize(window_img, seg_window, thresh);
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
-//        seg_window = seg_window == 255;
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize2.txt", seg_window);
+        seg_window = seg_window == 1;
 //        seg_window = seg_window / 255;
         imshow("seg_window", seg_window);
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
-        waitKey();
-        int *first = seg_window.ptr<int>(0);
-        int *last = seg_window.ptr<int>(seg_window.rows - 1);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize3.txt", seg_window);
+//        waitKey();
+        transpose(seg_window, seg_window);
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize4.txt", seg_window);
+        uchar *first = seg_window.ptr<uchar>(0);
+        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
         vector<int> cols1,cols2;
         findKEdge(first, 0, 5, cols1);
         findKEdge(last , 0, 5, cols2);
@@ -1045,16 +1047,16 @@ void TextDetector::min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &
     dist = min_dist;
 }
 
-void TextDetector::findKEdge(int *data, int edgeValue,int k,vector<int> &coords){
+void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
     int count = 0;
     for (int i = 0; i < (int)sizeof(data); i ++) {
+        cout<<(int)data[i]<<endl;
         if(edgeValue == data[i]){
-            if(count != k){
+            if(count < k){
                 count ++;
                 coords.push_back(i);
             }
-            else if (count == k)
-                break;
+
         }
     }
     
