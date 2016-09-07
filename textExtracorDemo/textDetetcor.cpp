@@ -425,7 +425,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             thresh = 0;
         cv::Mat seg_window;
         threshold(window_img_gray, seg_window, thresh, 255, THRESH_BINARY);
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
+        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize.txt", seg_window);
         uchar *first = seg_window.ptr<uchar>(0);
         uchar *last = seg_window.ptr<uchar>(seg_window.cols - 1);
         vector<int> cols1,cols2;
@@ -1066,7 +1066,7 @@ void TextDetector::perspective(Mat &src, float in_point[8], Mat &dst)
 
 void TextDetector::getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect)
 {
-    out = cv::Mat(rect.width, rect.height, CV_8UC3,Scalar(255));
+    out = cv::Mat(rect.height, rect.width, CV_8UC3,Scalar(255));
     vector<cv::Point2f>  quad_pts;
     //映射到原图上
     vector<cv::Point2f> pointss;
