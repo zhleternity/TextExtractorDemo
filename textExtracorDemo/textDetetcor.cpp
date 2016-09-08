@@ -375,44 +375,37 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 //segment the spine text
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
-    transpose(spineImage, spineImage);
-    flip(spineImage, spineImage, 0);
-
     cv::Mat spineGray;
-//    imshow("source image", spineImage);
-//    cout<<(int)spineImage.at<uchar>(0, 0)<<endl;
-//    WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", spineImage);
-
-
     cvtColor(spineImage, spineGray, CV_RGB2GRAY);
-//    imshow("gray source" , spineGray);
+    imshow("gray source" , spineGray);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", spineGray);
 //    waitKey();
     cv::Mat spineAhe;
-    adaptiveHistEqual(spineGray, spineAhe, 1.01);
-//    imshow("ahe", spineAhe);
-    
-//    Size spine_gray_sz = spineGray.size();
-    
+    adaptiveHistEqual(spineGray, spineAhe, 2.7);
+    imshow("ahe", spineAhe);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/gray2.txt", spineAhe);
     
     int window_num = 40;
-    int window_h = roundf(spineImage.cols / (float)window_num) ;
-    int window_w = spineImage.rows;
+    double window_h = spineImage.rows / (double)window_num;
+    int window_w = spineImage.cols;
     
-    cv::Mat spine_th(window_w,window_h * window_num, CV_8UC1, Scalar(0));
+    cv::Mat spine_th = cv::Mat::zeros(spineGray.size(), CV_8U);
     
-    for (int i = 4; i < window_num; i ++) {
-        int cut_from_r = window_h * i;
-        int cut_to_r = window_h * (i+1);
-        cv::Mat window_img;//(cut_to_r-cut_from_r, window_w, CV_8U,Scalar(0));
-        cv::Rect rect = cv::Rect(cut_from_r, 0, cut_to_r - cut_from_r, window_w);
-        getROI(spineGray, window_img, rect);
-//        imshow("window section", window_img);
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", window_img);
+    for (int i = 10; i < window_num; i ++) {
+        double cut_from_r = window_h * i ;
+        double cut_to_r = window_h * (i+1);
+        cv::Mat window_img = cv::Mat::zeros(Size(cut_to_r-cut_from_r, window_w), CV_8U);
+        cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
+//        getROI(spineGray, window_img, rect);
+        window_img = cv::Mat(spineGray, rect);
+        imshow("window section", window_img);
+//        waitKey();
+        WriteData("/Users/eternity/Desktop/未命名文件夹/gray3.txt", window_img);
         
         sharpenImage(window_img, window_img);
-//        imshow("sharpen", window_img);
+        imshow("sharpen", window_img);
 //        waitKey();
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", window_img);
+        WriteData("/Users/eternity/Desktop/未命名文件夹/gray4.txt", window_img);
         double max_local,min_local;
         minMaxLoc(window_img, &min_local, &max_local);
         double color_diff = max_local - min_local;
@@ -520,6 +513,10 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         }
     }
     segSpine = spine_th;
+    transpose(segSpine, segSpine);
+    flip(segSpine, segSpine, 0);
+    imshow("segspine", segSpine);
+    waitKey();
     spine_th.release();
     
     
