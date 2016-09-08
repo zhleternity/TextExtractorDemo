@@ -379,17 +379,17 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     flip(spineImage, spineImage, 0);
 
     cv::Mat spineGray;
-    imshow("source image", spineImage);
+//    imshow("source image", spineImage);
 //    cout<<(int)spineImage.at<uchar>(0, 0)<<endl;
 //    WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", spineImage);
 
 
     cvtColor(spineImage, spineGray, CV_RGB2GRAY);
-    imshow("gray source" , spineGray);
+//    imshow("gray source" , spineGray);
 //    waitKey();
     cv::Mat spineAhe;
     adaptiveHistEqual(spineGray, spineAhe, 1.01);
-    imshow("ahe", spineAhe);
+//    imshow("ahe", spineAhe);
     
 //    Size spine_gray_sz = spineGray.size();
     
@@ -406,11 +406,11 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         cv::Mat window_img;//(cut_to_r-cut_from_r, window_w, CV_8U,Scalar(0));
         cv::Rect rect = cv::Rect(cut_from_r, 0, cut_to_r - cut_from_r, window_w);
         getROI(spineGray, window_img, rect);
-        imshow("window section", window_img);
+//        imshow("window section", window_img);
 //        WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", window_img);
         
         sharpenImage(window_img, window_img);
-        imshow("sharpen", window_img);
+//        imshow("sharpen", window_img);
 //        waitKey();
 //        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", window_img);
         double max_local,min_local;
@@ -431,34 +431,34 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 //        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize2.txt", seg_window);
         seg_window = seg_window == 1;
 //        seg_window = seg_window / 255;
-        imshow("seg_window", seg_window);
+//        imshow("seg_window", seg_window);
 //        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize3.txt", seg_window);
 //        waitKey();
         transpose(seg_window, seg_window);
-        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize4.txt", seg_window);
-        uchar *first = seg_window.ptr<uchar>(0);
-        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
-        vector<int> cols1,cols2;
-        findKEdge(first, 0, 5, cols1);
-        findKEdge(last , 0, 5, cols2);
+//        uchar *first = seg_window.ptr<uchar>(0);
+//        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
+        vector<int> cols1,cols2,rows1,rows2;
+        findKEdgeFirst(seg_window, 0, 5, rows1, cols1);
+        findKEdgeLast (seg_window, 0, 5, rows2, cols2);
         float max_zero_dist, max_one_dist;
         if(cols1.empty() || cols2.empty())
             max_zero_dist = 0.0;
         else{
-            float avg_right = sum(cols2)[0] / (int)sizeof(cols2);
-            float avg_left  = sum(cols1)[0] / (int)sizeof(cols1);
+            float avg_right = (cols2[0]+cols2[1]+cols2[2]+cols2[3]+cols2[4]) / (int)sizeof(cols2);
+            float avg_left  = (cols1[0]+cols1[1]+cols1[2]+cols1[3]+cols1[4]) / (int)sizeof(cols1);
             max_zero_dist = avg_right - avg_left;
         }
         cols1.clear();
         cols2.clear();
         
-        findKEdge(first, 255, 5, cols1);
-        findKEdge(last , 255, 5, cols2);
+        
+        findKEdgeFirst(seg_window, 255, 5, rows1, cols1);
+        findKEdgeLast (seg_window, 255, 5, rows2, cols2);
         if(cols1.empty() || cols2.empty())
             max_one_dist = 0;
         else{
-            float avg_right = sum(cols2)[0] / (int)sizeof(cols2);
-            float avg_left  = sum(cols1)[0] / (int)sizeof(cols1);
+            float avg_right = (cols2[0]+cols2[1]+cols2[2]+cols2[3]+cols2[4]) / (int)sizeof(cols2);
+            float avg_left  = (cols1[0]+cols1[1]+cols1[2]+cols1[3]+cols1[4]) / (int)sizeof(cols1);
             max_one_dist = avg_right - avg_left;
         }
         cols1.clear();
@@ -1047,17 +1047,40 @@ void TextDetector::min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &
     dist = min_dist;
 }
 
-void TextDetector::findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords){
+void TextDetector::findKEdgeFirst(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols){
     int count = 0;
-    for (int i = 0; i < (int)sizeof(data); i ++) {
-        cout<<(int)data[i]<<endl;
-        if(edgeValue == data[i]){
-            if(count < k){
-                count ++;
-                coords.push_back(i);
+    for (int i = 0; i < data.cols; i ++) {
+        uchar *u = data.ptr<uchar>(i);
+        for (int j = 0; j < data.rows; j ++) {
+            if(edgeValue == (int)u[j]){
+                if(count < k){
+                    count ++;
+                    cols.push_back(i);
+                    rows.push_back(j);
+                }
+                
             }
 
         }
+    }
+    
+}
+
+void TextDetector::findKEdgeLast(cv::Mat &data, int edgeValue,int k,vector<int> &rows, vector<int> &cols){
+    int count = 0;
+    for (int i = data.cols - 1; i >= 0; i --) {
+        uchar *u = data.ptr<uchar>(i);
+        for (int j = data.rows - 1; j >= 0; j --) {
+            if(edgeValue == (int)u[j]){
+                if(count < k){
+                    count ++;
+                    cols.push_back(i);
+                    rows.push_back(j);
+                }
+                
+            }
+        }
+        
     }
     
 }
@@ -1071,7 +1094,7 @@ void TextDetector::adaptiveHistEqual(cv::Mat &src,cv::Mat &dst,double clipLimit)
 
 void TextDetector::perspective(Mat &src, float in_point[8], Mat &dst)
 {
-    float w_a4 = sqrt(pow(in_point[0] - in_point[2], 2) + pow(in_point[1] - in_point[3] ,2 ));
+    float w_a4 = sqrt(pow(in_point[0] - in_point[2], 2) + pow(in_point[1] - in_point[3] ,2));
     float h_a4 = sqrt(pow(in_point[0] - in_point[4], 2) + pow(in_point[1] - in_point[5] ,2));
     dst = Mat::zeros(h_a4, w_a4, CV_8UC3);
     

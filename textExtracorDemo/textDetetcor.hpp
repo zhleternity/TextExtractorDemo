@@ -98,8 +98,8 @@ protected:
     void perspective(Mat &src, float in_point[8], Mat &dst);
     void getROI(cv::Mat &src,cv::Mat &out,cv::Rect rect);
     void getROI2(cv::Mat &src,cv::Mat &out,cv::Rect rect);
-    void findKEdge(uchar *data, int edgeValue,int k,vector<int> &coords);
-    
+    void findKEdgeFirst(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
+    void findKEdgeLast(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
     void min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist);
     int max_array(int *a);
     int min_array(int *a);
