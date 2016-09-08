@@ -422,21 +422,13 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             thresh = threshold(window_img, window_tmp, 1, 255, THRESH_OTSU);
         else
             thresh = 0;
-        cout<<thresh<<endl;
+//        cout<<thresh<<endl;
         cv::Mat seg_window(window_img.size(), CV_64F);
-//        threshold(window_img, seg_window, thresh, 255, THRESH_BINARY);
-//        Histogrom1D h1;
-//        seg_window = h1.stretch(window_img, thresh);
         imgQuantize(window_img, seg_window, thresh);
 //        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize2.txt", seg_window);
         seg_window = seg_window == 1;
 //        seg_window = seg_window / 255;
-//        imshow("seg_window", seg_window);
-//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize3.txt", seg_window);
-//        waitKey();
-        transpose(seg_window, seg_window);
-//        uchar *first = seg_window.ptr<uchar>(0);
-//        uchar *last = seg_window.ptr<uchar>(seg_window.rows - 1);
+
         vector<int> cols1,cols2,rows1,rows2;
         findKEdgeFirst(seg_window, 0, 5, rows1, cols1);
         findKEdgeLast (seg_window, 0, 5, rows2, cols2);
@@ -444,12 +436,14 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         if(cols1.empty() || cols2.empty())
             max_zero_dist = 0.0;
         else{
-            float avg_right = (cols2[0]+cols2[1]+cols2[2]+cols2[3]+cols2[4]) / (int)sizeof(cols2);
-            float avg_left  = (cols1[0]+cols1[1]+cols1[2]+cols1[3]+cols1[4]) / (int)sizeof(cols1);
+            float avg_right = (rows2[0]+rows2[1]+rows2[2]+rows2[3]+rows2[4]) / (float)sizeof(rows2);
+            float avg_left  = (rows1[0]+rows1[1]+rows1[2]+rows1[3]+rows1[4]) / (float)sizeof(rows1);
             max_zero_dist = avg_right - avg_left;
         }
         cols1.clear();
         cols2.clear();
+        rows1.clear();
+        rows2.clear();
         
         
         findKEdgeFirst(seg_window, 255, 5, rows1, cols1);
@@ -457,12 +451,15 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         if(cols1.empty() || cols2.empty())
             max_one_dist = 0;
         else{
-            float avg_right = (cols2[0]+cols2[1]+cols2[2]+cols2[3]+cols2[4]) / (int)sizeof(cols2);
-            float avg_left  = (cols1[0]+cols1[1]+cols1[2]+cols1[3]+cols1[4]) / (int)sizeof(cols1);
+            float avg_right = (rows2[0]+rows2[1]+rows2[2]+rows2[3]+rows2[4]) / (float)sizeof(rows2);
+            float avg_left  = (rows1[0]+rows1[1]+rows1[2]+rows1[3]+rows1[4]) / (float)sizeof(rows1);
             max_one_dist = avg_right - avg_left;
         }
         cols1.clear();
         cols2.clear();
+        rows1.clear();
+        rows2.clear();
+        
         cv::Mat idx;
         findNonZero(seg_window, idx);
         int one_count = (int)idx.total();
@@ -489,7 +486,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     if (removeNoise) {
         vector<vector<cv::Point>> contours;
         imshow("spine_th", spine_th);
-        waitKey();
+//        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
         
         
