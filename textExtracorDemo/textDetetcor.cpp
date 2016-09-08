@@ -376,12 +376,13 @@ cv::Mat TextDetector::computeStrokeWidth(cv::Mat &dst){
 void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise){
 
     cv::Mat spineGray;
-    cvtColor(spineImage, spineGray, CV_RGB2GRAY);
+    cvtColor(spineImage, spineGray, CV_BGR2GRAY);
     imshow("gray source" , spineGray);
+    spineGray = spineGray - 0.5;
     WriteData("/Users/eternity/Desktop/未命名文件夹/gray1.txt", spineGray);
 //    waitKey();
     cv::Mat spineAhe;
-    adaptiveHistEqual(spineGray, spineAhe, 2.7);
+    adaptiveHistEqual(spineGray, spineAhe, 0.01);
     imshow("ahe", spineAhe);
     WriteData("/Users/eternity/Desktop/未命名文件夹/gray2.txt", spineAhe);
     
@@ -392,10 +393,10 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     cv::Mat spine_th = cv::Mat::zeros(spineGray.size(), CV_8U);
     
     for (int i = 0; i < window_num; i ++) {
-        double cut_from_r = window_h * i ;
+        double cut_from_r = window_h * i;
         double cut_to_r = window_h * (i+1);
-        cv::Mat window_img = cv::Mat::zeros(Size(cut_to_r-cut_from_r, window_w), CV_8U);
-        cv::Rect rect = cv::Rect(0, cut_from_r, window_w, cut_to_r - cut_from_r);
+        cv::Mat window_img = cv::Mat::zeros(Size(cut_to_r-cut_from_r + 1, window_w), CV_8U);
+        cv::Rect rect = cv::Rect(0, cut_from_r, window_w - 1, cut_to_r - cut_from_r + 1);
 //        getROI(spineGray, window_img, rect);
         window_img = cv::Mat(spineGray, rect);
         imshow("window section", window_img);
@@ -511,7 +512,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     transpose(segSpine, segSpine);
     flip(segSpine, segSpine, 0);
     imshow("segspine", segSpine);
-    waitKey();
+//    waitKey();
     spine_th.release();
     
     
@@ -538,31 +539,45 @@ void TextDetector::imgQuantize(cv::Mat &src, cv::Mat &dst, double level){
 //find words
 void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<WordsStatus> &words_status){
     cv::Mat spine_th = seg_spine.clone();
-    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
-    cv::Mat labels = CCs.apply(spine_th);
-    vector<ComponentProperty> props = CCs.getComponentsProperties();
-    int sz = (int)props.size();
-    vector<Point2f> cc_centers_vec;
-    cv::Mat plot_pic(sz, sz, CV_32F, Scalar(0));
-    cv::Mat cc_centers(sz, 2, CV_32F, Scalar(0));
-    vector<vector<cv::Point>> cc_pixels;
-    for(ComponentProperty &prop : props){
-        cc_centers_vec.push_back(prop.centroid);
-        cc_pixels.push_back(prop.pixelIdxList);
+    vector<int> labels;
+    connectedComponents(spine_th, labels);
+    
+    vector<vector<cv::Point>> ccs;
+    vector<Point2f> centers;
+    vector<vector<cv::Point>> pixelIdxList;
+    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    int sz = (int)ccs.size();
+    for (int i = 0; i < sz; i ++) {
+        Moments blob = cv::moments(ccs[i]);
+        Point2f center = getBlobCentroid(blob);
+        centers.push_back(center);
+        pixelIdxList.push_back(ccs[i]);
+        
     }
     
-    cc_centers = cv::Mat(cc_centers_vec);
     
-    cv::Mat cc_px_dist(sz, sz, CV_8U, Scalar(0));
+    
+    
+//    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
+//    cv::Mat labels = CCs.apply(spine_th);
+//    vector<ComponentProperty> props = CCs.getComponentsProperties();
+//    int sz = (int)props.size();
+//    vector<Point2f> cc_centers_vec;
+    cv::Mat plot_pic = cv::Mat::zeros(Size(sz, sz), CV_32F);
+    cv::Mat cc_centers = cv::Mat::zeros(Size(sz, 2), CV_32F);
+    
+    cc_centers = cv::Mat(centers);
+    
+    cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_8U);
     
     for (int i = 0; i < sz - 1; i ++) {
         for (int j = i + 1; j < sz; j ++) {
 //            int len = (int)cc_pixels[j].size();
-            vector<Point2f> px_j;
-            px_j  = cv::Mat(cc_pixels[j]);
+            vector<cv::Point> px_j;
+            px_j  = cv::Mat(pixelIdxList[j]);
 //            int len2 = (int)cc_pixels[i].size();
-            vector<Point2f> px_i;
-            px_i = cv::Mat(cc_pixels[i]);
+            vector<cv::Point> px_i;
+            px_i = cv::Mat(pixelIdxList[i]);
             int dist;
             min_px_dist(px_i, px_j, dist);
             cc_px_dist.at<int>(i, j) = dist;
@@ -1024,7 +1039,7 @@ int TextDetector::min_array(int *a)
 
 
 //calculate the minimum Eucledian distance between two sets of pixels
-void TextDetector::min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist){
+void TextDetector::min_px_dist(vector<cv::Point> &px1, vector<cv::Point> &px2, int &dist){
     int min_dist = 9999;
     for (int i = 0; i < px1.size(); i ++) {
         for (int j = 0; j < px2.size(); j ++) {
@@ -1208,6 +1223,22 @@ void TextDetector::sharpenImage(const cv::Mat &image, cv::Mat &result)
 
 
 
+float TextDetector::getBlobEccentricity( const Moments& moment ) {
+    double left_comp  = (moment.nu20 + moment.nu02) / 2.0;
+    double right_comp = sqrt( (4 * moment.nu11 * moment.nu11) + (moment.nu20 - moment.nu02)*(moment.nu20 - moment.nu02) ) / 2.0;
+    
+    double eig_val_1 = left_comp + right_comp;
+    double eig_val_2 = left_comp - right_comp;
+    
+    return sqrtf( 1.0 - (eig_val_2 / eig_val_1) );
+}
+
+/**
+ * From the given blob moment, calculate its centroid
+ */
+Point2f TextDetector::getBlobCentroid( const Moments& moment ) {
+    return Point2f( moment.m10 / moment.m00, moment.m01 / moment.m00 );
+}
 
 
 

@@ -110,7 +110,7 @@ protected:
     void getROI2(cv::Mat &src,cv::Mat &out,cv::Rect rect);
     void findKEdgeFirst(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
     void findKEdgeLast(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
-    void min_px_dist(vector<Point2f> &px1, vector<Point2f> &px2, int &dist);
+    void min_px_dist(vector<cv::Point> &px1, vector<cv::Point> &px2, int &dist);
     int max_array(int *a);
     int min_array(int *a);
     void cc_angle_mat(cv::Mat &cc_centers, cv::Mat &angle_mat);
@@ -127,7 +127,8 @@ protected:
     int WriteData(string fileName, cv::Mat& matData);
     void sharpenImage(const cv::Mat &image, cv::Mat &result);
     void imgQuantize(cv::Mat &src, cv::Mat &dst, double level);
-    
+    float getBlobEccentricity( const Moments& moment ) ;
+    Point2f getBlobCentroid( const Moments& moment ) ;
 private:
     string imageDirectory;
     TextDetecorParams Detectorparams;
