@@ -391,7 +391,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     
     cv::Mat spine_th = cv::Mat::zeros(spineGray.size(), CV_8U);
     
-    for (int i = 10; i < window_num; i ++) {
+    for (int i = 0; i < window_num; i ++) {
         double cut_from_r = window_h * i ;
         double cut_to_r = window_h * (i+1);
         cv::Mat window_img = cv::Mat::zeros(Size(cut_to_r-cut_from_r, window_w), CV_8U);
@@ -477,40 +477,35 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     }
     
     if (removeNoise) {
-        vector<vector<cv::Point>> contours;
+        vector<vector<cv::Point2f>> contours;
         imshow("spine_th", spine_th);
 //        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
- 
-        
-        
-        ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-        cv::Mat labels = CC.apply(spineGray);
-        vector<ComponentProperty> props = CC.getComponentsProperties();
-        
-//        connectedComponents(spine_th, labels);
-//        cv::Mat stats, centroids;
-//        connectedComponentsWithStats(spine_th, labels, stats, centroids);
-        
-        
-        for (ComponentProperty &prop : props) {
-            int box_width  = prop.boxCC.width;
-            int box_height = prop.boxCC.height;
-            float box_aspect = box_width / box_height;
-            int box_area = prop.area;
+
+        for (int i = 0; i < contours.size(); i ++) {
+            //compute bounding rect
+            cv::Rect rect = boundingRect(contours[i]);
+            double bbox_aspect = rect.width / (double)rect.height;
+            int bbox_area = rect.width * rect.height;
+            //compute solidity
+            vector<vector<Point>> hull(1);
+            convexHull( contours[0], hull[0] );
+            /* ... I hope this is correct ... */
+            double solidity = bbox_area / contourArea( hull[0] );
             
-            vector<cv::Point> tmp;
-            tmp = prop.pixelIdxList;
-            
-            for (int i = 0; i < prop.pixelIdxList.size(); i ++) {
-                if (box_width > spineImage.cols / 1.001 || (box_width > spineImage.cols / 1.4 && box_aspect > 5)
-                    || (box_height > spineImage.cols / 1.1) || ((box_area < (spineImage.cols/30))^2)
-                    || (box_aspect > 0.5 && box_aspect < 1.7 && (prop.solidity > 0.9))) {
-                    spine_th.at<int>(tmp[i].x, tmp[i].y)= 0;
-                    tmp.clear();
-                }
+            for (int j = 0; j < contours[i].size(); j ++) {
+                if ( (rect.width > spineImage.cols / 1.001)
+                    || (rect.width > spineImage.cols / 1.4 && bbox_aspect > 5.0)
+                    || (rect.height > spineImage.cols / 1.1)
+                    || (bbox_area < pow(spineImage.cols/30, 2))
+                    || (bbox_aspect > 0.5 && bbox_aspect < 1.7 && solidity > 0.9) )
+                    
+                    spine_th.at<int>(contours[i][j].x, contours[i][j].y) = 0;
             }
+            
+            
         }
+        
     }
     segSpine = spine_th;
     transpose(segSpine, segSpine);

@@ -151,7 +151,7 @@ int main(int argc, const char * argv[]) {
 //    pair<cv::Mat, cv::Rect> result = detector.applyTo(image);
 //    imshow("result", result.first);
     cv::Mat seg_spine = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
-    bool removeNois = true;
+    bool removeNois = false;
     detector.segmentText(image, seg_spine, removeNois);
     
     //get the candidate text region

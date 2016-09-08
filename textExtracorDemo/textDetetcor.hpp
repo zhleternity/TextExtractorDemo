@@ -65,6 +65,16 @@ struct WordsStatus {
 };
 
 
+struct ConnCompStats {
+    cv::Rect bboxes;
+    int bbox_width;
+    int bbox_height;
+    double bbox_aspect;
+    int bbox_area;
+    vector<cv::Point2f> bbox_idx_list;
+};
+
+
 class TextDetector{
 public:
     TextDetector(string imgDir = "");
