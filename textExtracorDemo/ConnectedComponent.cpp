@@ -140,7 +140,9 @@ Mat ConnectedComponent::apply( const Mat& image ) {
         properties[i].centroid     = calculateBlobCentroid( moment );
         
         /* Find the solidity of the blob from blob area / convex area */
-        vector<vector<Point2f>> contours;
+        vector<vector<cv::Point>> contours;
+//        blob.convertTo(blob, CV_32SC1);
+//        blob = blob / 255;
         findContours( blob, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE );
         for (int j = 0; j < contours.size(); j ++) {
             properties[i].boxCC = boundingRect(contours[j]);

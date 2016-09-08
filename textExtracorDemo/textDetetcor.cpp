@@ -488,10 +488,11 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         imshow("spine_th", spine_th);
 //        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+ 
         
         
         ConnectedComponent CC(Detectorparams.maxConnComponentNum, 8);
-        cv::Mat labels = CC.apply(spine_th);
+        cv::Mat labels = CC.apply(spineGray);
         vector<ComponentProperty> props = CC.getComponentsProperties();
         
 //        connectedComponents(spine_th, labels);
@@ -505,7 +506,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             float box_aspect = box_width / box_height;
             int box_area = prop.area;
             
-            vector<cv::Point2f> tmp;
+            vector<cv::Point> tmp;
             tmp = prop.pixelIdxList;
             
             for (int i = 0; i < prop.pixelIdxList.size(); i ++) {
@@ -552,7 +553,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     vector<Point2f> cc_centers_vec;
     cv::Mat plot_pic(sz, sz, CV_32F, Scalar(0));
     cv::Mat cc_centers(sz, 2, CV_32F, Scalar(0));
-    vector<vector<cv::Point2f>> cc_pixels;
+    vector<vector<cv::Point>> cc_pixels;
     for(ComponentProperty &prop : props){
         cc_centers_vec.push_back(prop.centroid);
         cc_pixels.push_back(prop.pixelIdxList);
@@ -615,7 +616,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         pt2 = cv::Point2f(cc_centers_vec[next_cc].x, cc_centers_vec[next_cc].y);
         line(plot_pic, pt1, pt2, Scalar(0,0,255));
         imshow("plot line", plot_pic);
-        cc_path[k] = curr_cc;
+        cc_path.push_back(curr_cc);
         curr_cc = next_cc;
         k = k + 1;
         
