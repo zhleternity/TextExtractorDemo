@@ -563,8 +563,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     vector<ComponentProperty> props = CCs.getComponentsProperties();
     int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
-    cv::Mat plot_pic= cv::Mat::zeros(sz, sz, CV_32F);
-    cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_32F);
+    cv::Mat plot_pic= cv::Mat::zeros(sz, sz, CV_8U);
+    cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_8U);
     vector<vector<cv::Point>> cc_pixels;
     for(ComponentProperty &prop : props){
         cc_centers_vec.push_back(prop.centroid);
@@ -573,35 +573,37 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     
     cc_centers = cv::Mat(cc_centers_vec);
     
-    cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_64F);
+    cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_8U);
     for (int i = 0; i < cc_px_dist.rows - 1; i ++) {
         uchar *data = cc_px_dist.ptr<uchar>(i);
         for (int j = i + 1; j < cc_px_dist.cols; j ++) {
-            cv::Mat px_j_mat = cv::Mat::zeros((int)cc_pixels[j].size(), 2, CV_8U);
+            cv::Mat px_j_mat;
             repeat(cc_pixels[j], 2, 1, px_j_mat);
             transpose(px_j_mat, px_j_mat);
-            cv::Mat px_i_mat = cv::Mat::zeros((int)cc_pixels[i].size(), 2, CV_8U);
+            cv::Mat px_i_mat;
             repeat(cc_pixels[i], 2, 1, px_i_mat);
             transpose(px_i_mat, px_i_mat);
             int dist;
             min_px_dist(px_i_mat, px_j_mat, dist);
 //            cout<<dist<<endl;
             data[j] = dist;
+            px_i_mat.release();
+            px_j_mat.release();
         }
     }
     
     
-    cv::Mat mat(3,2,CV_64F);
-    mat.at<uchar>(0,0) = 1;
-    mat.at<uchar>(0,1) = 2;
-    mat.at<uchar>(1,0) = 1;
-    mat.at<uchar>(1,1) = 4;
-    mat.at<uchar>(2,0) = 1;
-    mat.at<uchar>(2,1) = 1;
-    WriteData("/Users/eternity/Desktop/未命名文件夹/test1.txt", mat);
-    cv::Mat trans(2,3,mat.type());
-    transpose(mat, trans);
-    WriteData("/Users/eternity/Desktop/未命名文件夹/test2.txt", trans);
+//    cv::Mat mat(3,2,CV_32F);
+//    mat.at<uchar>(0,0) = 1;
+//    mat.at<uchar>(0,1) = 2;
+//    mat.at<uchar>(1,0) = 1;
+//    mat.at<uchar>(1,1) = 4;
+//    mat.at<uchar>(2,0) = 1;
+//    mat.at<uchar>(2,1) = 1;
+//    WriteData("/Users/eternity/Desktop/未命名文件夹/test1.txt", mat);
+//    cv::Mat trans(2,3,mat.type());
+//    transpose(mat, trans);
+//    WriteData("/Users/eternity/Desktop/未命名文件夹/test2.txt", trans);
 
     
     WriteData("/Users/eternity/Desktop/未命名文件夹/d1.txt", cc_px_dist);
@@ -616,6 +618,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         cc_px_dist.at<uchar>(i, i) = NaN;
     }
    
+    WriteData("/Users/eternity/Desktop/未命名文件夹/cc1.txt", cc_px_dist);
     cv::Mat temp = cc_px_dist;
 //    cc_poly_dist = temp;
     
