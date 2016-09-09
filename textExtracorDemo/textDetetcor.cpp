@@ -387,7 +387,14 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
 //    WriteData("/Users/eternity/Desktop/未命名文件夹/gray2.txt", spineAhe);
     
     int window_num = 40;
-    double window_h = spineImage.rows / (double)window_num;
+    
+    double window_h = (spineImage.rows / (double)window_num + 1e-3);
+//    tmp_h = tmp_h * 1e2;
+//    cout<<tmp_h<<endl;
+//    tmp_h = tmp_h / 1e2;
+//    cout<<tmp_h<<endl;
+//    double window_h = tmp_h;
+//    window_h = Round(window_h, 2);
     int window_w = spineImage.cols;
     
     cv::Mat spine_th = cv::Mat::zeros(spineGray.size(), CV_8U);
@@ -509,8 +516,8 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         
     }
     segSpine = spine_th;
-    transpose(segSpine, segSpine);
-    flip(segSpine, segSpine, 0);
+//    transpose(segSpine, segSpine);
+//    flip(segSpine, segSpine, 0);
     imshow("segspine", segSpine);
 //    waitKey();
     spine_th.release();
@@ -547,8 +554,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //    vector<Point2f> centers;
 //    vector<vector<cv::Point>> pixelIdxList;
 //    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-//    int sz = (int)ccs.size();
-//    for (int i = 0; i < sz; i ++) {
+//    int sz1 = (int)ccs.size();
+//    for (int i = 0; i < sz1; i ++) {
 //        Moments blob = cv::moments(ccs[i]);
 //        Point2f center = getBlobCentroid(blob);
 //        centers.push_back(center);
@@ -587,7 +594,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             transpose(px_i_mat, px_i_mat);
             int dist;
             min_px_dist(px_i_mat, px_j_mat, dist);
-//            cout<<dist<<endl;
+            cout<<dist<<endl;
             data[j] = dist;
             px_i_mat.release();
             px_j_mat.release();
@@ -638,7 +645,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         double min_value = min_array(data);
         int next_cc = 0;
         for (int i = 0; i < sizeof(data); i ++) {
-//            cout<<data[i]<<endl;
+            cout<<data[i]<<endl;
             if(min_value == data[i]){
                 next_cc = i;
                 break;
@@ -736,7 +743,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //                cout<<cc_pixels[curr_sym].size()<<endl;
                 for (int k = 0; k < cc_pixels[curr_sym].size(); k ++){
                     cout<<cc_pixels[curr_sym][k].x<<","<<cc_pixels[curr_sym][k].y<<endl;
-                    label.at<int>(cc_pixels[curr_sym][k].x, cc_pixels[curr_sym][k].y) = i;
+                    label.at<int>((int)cc_pixels[curr_sym][k].x, (int)cc_pixels[curr_sym][k].y) = i;
                 }
             }
             
@@ -1089,11 +1096,11 @@ double TextDetector::min_array(double *a)
 
 
 //calculate the minimum Eucledian distance between two sets of pixels
-void TextDetector::min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist){
-    int min_dist = 9999;
+void TextDetector::min_px_dist(cv::Mat &px1, cv::Mat &px2, double &dist){
+    double min_dist = 9999.0;
     for (int i = 0; i < px1.rows; i ++) {
         for (int j = 0; j < px2.rows; j ++) {
-            int tmp_dist = sqrt( pow((px1.at<uchar>(i, 0) - px2.at<uchar>(j, 0)), 2) +
+            double tmp_dist = sqrt( pow((px1.at<uchar>(i, 0) - px2.at<uchar>(j, 0)), 2) +
                                  pow((px1.at<uchar>(i, 1) - px2.at<uchar>(j, 1)), 2) );
             if(tmp_dist < min_dist)
                 min_dist = tmp_dist;
@@ -1292,6 +1299,17 @@ Point2f TextDetector::getBlobCentroid( const Moments& moment ) {
     return Point2f( moment.m10 / moment.m00, moment.m01 / moment.m00 );
 }
 
+double TextDetector::Round(double dVal, short iPlaces) {
+    double dRetval;
+    double dMod = 0.0000001;
+    if (dVal<0.0) dMod=-0.0000001;
+    dRetval=dVal;
+    dRetval+=(5.0/pow(10.0,iPlaces+1.0));
+    dRetval*=pow(10.0,iPlaces);
+    dRetval=floor(dRetval+dMod);
+    dRetval/=pow(10.0,iPlaces);
+    return(dRetval);
+}
 
 
 
