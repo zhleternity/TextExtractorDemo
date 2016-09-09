@@ -111,8 +111,8 @@ protected:
     void findKEdgeFirst(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
     void findKEdgeLast(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
     void min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist);
-    int max_array(int *a);
-    int min_array(int *a);
+    double max_array(double *a);
+    double min_array(double *a);
     void cc_angle_mat(cv::Mat &cc_centers, cv::Mat &angle_mat);
     void getWordsStatus(vector<int> &words, cv::Mat &cc_dist, cv::Mat &cc_angle, WordsStatus &word_stat);
     void get_dist_arr(vector<int> &word, cv::Mat &dist_mat, vector<int> &dist_array);
