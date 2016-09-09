@@ -577,12 +577,9 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     for (int i = 0; i < cc_px_dist.rows - 1; i ++) {
         uchar *data = cc_px_dist.ptr<uchar>(i);
         for (int j = i + 1; j < cc_px_dist.cols; j ++) {
-            vector<cv::Point> px_j;
             cv::Mat px_j_mat = cv::Mat::zeros((int)cc_pixels[j].size(), 2, CV_8U);
             repeat(cc_pixels[j], 2, 1, px_j_mat);
             transpose(px_j_mat, px_j_mat);
-            vector<cv::Point> px_i;
-            px_i = cc_pixels[i];
             cv::Mat px_i_mat = cv::Mat::zeros((int)cc_pixels[i].size(), 2, CV_8U);
             repeat(cc_pixels[i], 2, 1, px_i_mat);
             transpose(px_i_mat, px_i_mat);
@@ -592,30 +589,26 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             data[j] = dist;
         }
     }
-//    WriteData("/Users/eternity/Desktop/未命名文件夹/dist.txt", cc_px_dist);
-//    cout<<(int)cc_px_dist.at<uchar>(3, 2)<<endl;
     
-    cv::Mat cc_poly_dist = cc_px_dist.clone();
+    WriteData("/Users/eternity/Desktop/未命名文件夹/d1.txt", cc_px_dist);
     cv::Mat transpose;
     cv::transpose(cc_px_dist, transpose);
-    WriteData("/Users/eternity/Desktop/未命名文件夹/t.txt", transpose);
-    cc_poly_dist = cc_px_dist + transpose;
+    cc_px_dist = cc_px_dist + transpose;
+    WriteData("/Users/eternity/Desktop/未命名文件夹/cc.txt", cc_px_dist);
     
     double NaN = nan("not a number");
-    for (int i = 0; i < cc_poly_dist.rows; i ++) {
-        cc_poly_dist.at<double>(i, i) = NaN;
+    for (int i = 0; i < cc_px_dist.rows; i ++) {
+        cc_px_dist.at<double>(i, i) = NaN;
     }
-     WriteData("/Users/eternity/Desktop/未命名文件夹/dist1.txt", cc_poly_dist);
    
-    cv::Mat temp = cc_poly_dist;
+    cv::Mat temp = cc_px_dist;
 //    cc_poly_dist = temp;
     
     int curr_cc = 0;
-    //    cv::Mat cc_path(1, sz, CV_8U, Scalar(0));
     vector<int> cc_path;
     int k = 0;
     while (k < sz) {
-        uchar*data = cc_poly_dist.ptr<uchar>(curr_cc);
+        uchar*data = cc_px_dist.ptr<uchar>(curr_cc);
         int min_value = min_array((int*)data);
         int next_cc = 0;
         for (int i = 0; i < sizeof(data); i ++) {
@@ -626,8 +619,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         }
         
         for (int i = 0; i < sz; i ++) {
-            cc_poly_dist.at<double>(curr_cc, i) = NaN;
-            cc_poly_dist.at<double>(i, curr_cc) = NaN;
+            cc_px_dist.at<double>(curr_cc, i) = NaN;
+            cc_px_dist.at<double>(i, curr_cc) = NaN;
             
         }
         
@@ -643,7 +636,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         
     }
     cc_path[k] = curr_cc;
-    cc_poly_dist = temp;
+    cc_px_dist = temp;
     
     
     //split into words
@@ -656,8 +649,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         int curr_cc = cc_path[l];
         int prev_cc = cc_path[l-1];
         int next_cc = cc_path[l+1];
-        int dist_to_prev = (int)cc_poly_dist.at<uchar>(curr_cc, prev_cc);
-        int dist_to_next = (int)cc_poly_dist.at<uchar>(curr_cc, next_cc);
+        int dist_to_prev = (int)cc_px_dist.at<uchar>(curr_cc, prev_cc);
+        int dist_to_next = (int)cc_px_dist.at<uchar>(curr_cc, next_cc);
         if (dist_to_prev > (dist_to_next * word_end_ratio) ) {
             if (l - 1 >= word_start) {
                 
@@ -1208,10 +1201,12 @@ int TextDetector::WriteData(string fileName, cv::Mat& matData)
     }
     for (int r = 0; r < matData.rows; r++)
     {
+        outFile <<r<<"行";
         for (int c = 0; c < matData.cols; c++)
         {
-            double data=(double)matData.at<uchar>(r,c);
-            outFile << data << "\t" ;
+            double data= (double)matData.at<uchar>(r,c);
+            
+            outFile <<data << "\t" ;
         }
         outFile << endl;
     }
