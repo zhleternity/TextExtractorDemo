@@ -590,15 +590,30 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         }
     }
     
+    
+    cv::Mat mat(3,2,CV_64F);
+    mat.at<uchar>(0,0) = 1;
+    mat.at<uchar>(0,1) = 2;
+    mat.at<uchar>(1,0) = 1;
+    mat.at<uchar>(1,1) = 4;
+    mat.at<uchar>(2,0) = 1;
+    mat.at<uchar>(2,1) = 1;
+    WriteData("/Users/eternity/Desktop/未命名文件夹/test1.txt", mat);
+    cv::Mat trans(2,3,mat.type());
+    transpose(mat, trans);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/test2.txt", trans);
+
+    
     WriteData("/Users/eternity/Desktop/未命名文件夹/d1.txt", cc_px_dist);
     cv::Mat transpose;
     cv::transpose(cc_px_dist, transpose);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/transpose.txt", transpose);
     cc_px_dist = cc_px_dist + transpose;
     WriteData("/Users/eternity/Desktop/未命名文件夹/cc.txt", cc_px_dist);
     
     double NaN = nan("not a number");
     for (int i = 0; i < cc_px_dist.rows; i ++) {
-        cc_px_dist.at<double>(i, i) = NaN;
+        cc_px_dist.at<uchar>(i, i) = NaN;
     }
    
     cv::Mat temp = cc_px_dist;
@@ -619,8 +634,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         }
         
         for (int i = 0; i < sz; i ++) {
-            cc_px_dist.at<double>(curr_cc, i) = NaN;
-            cc_px_dist.at<double>(i, curr_cc) = NaN;
+            cc_px_dist.at<uchar>(curr_cc, i) = NaN;
+            cc_px_dist.at<uchar>(i, curr_cc) = NaN;
             
         }
         
@@ -1201,7 +1216,7 @@ int TextDetector::WriteData(string fileName, cv::Mat& matData)
     }
     for (int r = 0; r < matData.rows; r++)
     {
-        outFile <<r<<"行";
+        outFile <<r<<"行"<<endl;
         for (int c = 0; c < matData.cols; c++)
         {
             double data= (double)matData.at<uchar>(r,c);
