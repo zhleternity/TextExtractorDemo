@@ -550,25 +550,25 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //    spine_th.convertTo(spine_th, CV_8U);
 //    connectedComponents(spine_th, labels);
 //    
-//    vector<vector<cv::Point>> ccs;
-//    vector<Point2f> centers;
-//    vector<vector<cv::Point>> pixelIdxList;
-//    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-//    int sz1 = (int)ccs.size();
-//    for (int i = 0; i < sz1; i ++) {
-//        Moments blob = cv::moments(ccs[i]);
-//        Point2f center = getBlobCentroid(blob);
-//        centers.push_back(center);
-//        pixelIdxList.push_back(ccs[i]);
-//        
-//    }
+    vector<vector<cv::Point>> ccs;
+    vector<Point2f> centers;
+    vector<vector<cv::Point>> pixelIdxList;
+    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    int sz1 = (int)ccs.size();
+    for (int i = 0; i < sz1; i ++) {
+        Moments blob = cv::moments(ccs[i]);
+        Point2f center = getBlobCentroid(blob);
+        centers.push_back(center);
+        pixelIdxList.push_back(ccs[i]);
+        
+    }
     
     
 
     ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
     cv::Mat labels = CCs.apply(spine_th);
-    cv::Mat label = cv::Mat::zeros(spine_th.size() , CV_8UC1);
-    connectedComponents(spine_th, label);
+//    cv::Mat label = cv::Mat::zeros(spine_th.size() , CV_8UC1);
+//    connectedComponents(spine_th, label);
     vector<ComponentProperty> props = CCs.getComponentsProperties();
     int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
@@ -592,7 +592,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             cv::Mat px_i_mat;
             repeat(cc_pixels[i], 2, 1, px_i_mat);
             transpose(px_i_mat, px_i_mat);
-            int dist;
+            double dist;
             min_px_dist(px_i_mat, px_j_mat, dist);
             cout<<dist<<endl;
             data[j] = dist;
@@ -743,7 +743,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //                cout<<cc_pixels[curr_sym].size()<<endl;
                 for (int k = 0; k < cc_pixels[curr_sym].size(); k ++){
                     cout<<cc_pixels[curr_sym][k].x<<","<<cc_pixels[curr_sym][k].y<<endl;
-                    label.at<int>((int)cc_pixels[curr_sym][k].x, (int)cc_pixels[curr_sym][k].y) = i;
+                    labels.at<int>((int)cc_pixels[curr_sym][k].x, (int)cc_pixels[curr_sym][k].y) = i;
                 }
             }
             
