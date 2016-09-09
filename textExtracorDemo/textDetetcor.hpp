@@ -110,7 +110,7 @@ protected:
     void getROI2(cv::Mat &src,cv::Mat &out,cv::Rect rect);
     void findKEdgeFirst(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
     void findKEdgeLast(cv::Mat &data, int edgeValue,int k,vector<int> &rows,vector<int> &cols);
-    void min_px_dist(vector<cv::Point> &px1, vector<cv::Point> &px2, int &dist);
+    void min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist);
     int max_array(int *a);
     int min_array(int *a);
     void cc_angle_mat(cv::Mat &cc_centers, cv::Mat &angle_mat);

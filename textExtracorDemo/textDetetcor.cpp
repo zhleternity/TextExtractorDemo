@@ -539,82 +539,95 @@ void TextDetector::imgQuantize(cv::Mat &src, cv::Mat &dst, double level){
 //find words
 void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<WordsStatus> &words_status){
     cv::Mat spine_th = seg_spine.clone();
-    vector<int> labels;
-    connectedComponents(spine_th, labels);
+//    cv::Mat labels;
+//    spine_th.convertTo(spine_th, CV_8U);
+//    connectedComponents(spine_th, labels);
+//    
+//    vector<vector<cv::Point>> ccs;
+//    vector<Point2f> centers;
+//    vector<vector<cv::Point>> pixelIdxList;
+//    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+//    int sz = (int)ccs.size();
+//    for (int i = 0; i < sz; i ++) {
+//        Moments blob = cv::moments(ccs[i]);
+//        Point2f center = getBlobCentroid(blob);
+//        centers.push_back(center);
+//        pixelIdxList.push_back(ccs[i]);
+//        
+//    }
     
-    vector<vector<cv::Point>> ccs;
-    vector<Point2f> centers;
-    vector<vector<cv::Point>> pixelIdxList;
-    findContours(spine_th, ccs, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    int sz = (int)ccs.size();
-    for (int i = 0; i < sz; i ++) {
-        Moments blob = cv::moments(ccs[i]);
-        Point2f center = getBlobCentroid(blob);
-        centers.push_back(center);
-        pixelIdxList.push_back(ccs[i]);
-        
+    
+
+    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
+    cv::Mat labels = CCs.apply(spine_th);
+    vector<ComponentProperty> props = CCs.getComponentsProperties();
+    int sz = (int)props.size();
+    vector<Point2f> cc_centers_vec;
+    cv::Mat plot_pic= cv::Mat::zeros(sz, sz, CV_32F);
+    cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_32F);
+    vector<vector<cv::Point>> cc_pixels;
+    for(ComponentProperty &prop : props){
+        cc_centers_vec.push_back(prop.centroid);
+        cc_pixels.push_back(prop.pixelIdxList);
     }
     
+    cc_centers = cv::Mat(cc_centers_vec);
     
-    
-    
-//    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
-//    cv::Mat labels = CCs.apply(spine_th);
-//    vector<ComponentProperty> props = CCs.getComponentsProperties();
-//    int sz = (int)props.size();
-//    vector<Point2f> cc_centers_vec;
-    cv::Mat plot_pic = cv::Mat::zeros(Size(sz, sz), CV_32F);
-    cv::Mat cc_centers = cv::Mat::zeros(Size(sz, 2), CV_32F);
-    
-    cc_centers = cv::Mat(centers);
-    
-    cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_8U);
-    
-    for (int i = 0; i < sz - 1; i ++) {
-        for (int j = i + 1; j < sz; j ++) {
-//            int len = (int)cc_pixels[j].size();
+    cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_64F);
+    for (int i = 0; i < cc_px_dist.rows - 1; i ++) {
+        uchar *data = cc_px_dist.ptr<uchar>(i);
+        for (int j = i + 1; j < cc_px_dist.cols; j ++) {
             vector<cv::Point> px_j;
-            px_j  = cv::Mat(pixelIdxList[j]);
-//            int len2 = (int)cc_pixels[i].size();
+            cv::Mat px_j_mat = cv::Mat::zeros((int)cc_pixels[j].size(), 2, CV_8U);
+            repeat(cc_pixels[j], 2, 1, px_j_mat);
+            transpose(px_j_mat, px_j_mat);
             vector<cv::Point> px_i;
-            px_i = cv::Mat(pixelIdxList[i]);
+            px_i = cc_pixels[i];
+            cv::Mat px_i_mat = cv::Mat::zeros((int)cc_pixels[i].size(), 2, CV_8U);
+            repeat(cc_pixels[i], 2, 1, px_i_mat);
+            transpose(px_i_mat, px_i_mat);
             int dist;
-            min_px_dist(px_i, px_j, dist);
-            cc_px_dist.at<int>(i, j) = dist;
+            min_px_dist(px_i_mat, px_j_mat, dist);
+//            cout<<dist<<endl;
+            data[j] = dist;
         }
     }
+//    WriteData("/Users/eternity/Desktop/未命名文件夹/dist.txt", cc_px_dist);
+//    cout<<(int)cc_px_dist.at<uchar>(3, 2)<<endl;
     
     cv::Mat cc_poly_dist = cc_px_dist.clone();
     cv::Mat transpose;
     cv::transpose(cc_px_dist, transpose);
+    WriteData("/Users/eternity/Desktop/未命名文件夹/t.txt", transpose);
     cc_poly_dist = cc_px_dist + transpose;
+    
+    double NaN = nan("not a number");
     for (int i = 0; i < cc_poly_dist.rows; i ++) {
-        for (int j = 0; j < cc_poly_dist.cols; j ++) {
-            if( i == j)
-                cc_poly_dist.at<int>(i, j) = NAN;
-        }
+        cc_poly_dist.at<double>(i, i) = NaN;
     }
+     WriteData("/Users/eternity/Desktop/未命名文件夹/dist1.txt", cc_poly_dist);
+   
     cv::Mat temp = cc_poly_dist;
-    cc_poly_dist = temp;
+//    cc_poly_dist = temp;
     
     int curr_cc = 0;
-//    cv::Mat cc_path(1, sz, CV_8U, Scalar(0));
+    //    cv::Mat cc_path(1, sz, CV_8U, Scalar(0));
     vector<int> cc_path;
     int k = 0;
     while (k < sz) {
-        int *data = cc_poly_dist.ptr<int>(curr_cc);
-        int min_value = min_array(data);
+        uchar*data = cc_poly_dist.ptr<uchar>(curr_cc);
+        int min_value = min_array((int*)data);
         int next_cc = 0;
         for (int i = 0; i < sizeof(data); i ++) {
-            if(min_value == data[i]){
+            if(min_value == (int)data[i]){
                 next_cc = i;
                 break;
             }
         }
         
         for (int i = 0; i < sz; i ++) {
-            cc_poly_dist.at<int>(curr_cc, i) = NAN;
-            cc_poly_dist.at<int>(i, curr_cc) = NAN;
+            cc_poly_dist.at<double>(curr_cc, i) = NaN;
+            cc_poly_dist.at<double>(i, curr_cc) = NaN;
             
         }
         
@@ -623,6 +636,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         pt2 = cv::Point2f(cc_centers_vec[next_cc].x, cc_centers_vec[next_cc].y);
         line(plot_pic, pt1, pt2, Scalar(0,0,255));
         imshow("plot line", plot_pic);
+        waitKey();
         cc_path.push_back(curr_cc);
         curr_cc = next_cc;
         k = k + 1;
@@ -642,8 +656,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         int curr_cc = cc_path[l];
         int prev_cc = cc_path[l-1];
         int next_cc = cc_path[l+1];
-        int dist_to_prev = cc_poly_dist.at<int>(curr_cc, prev_cc);
-        int dist_to_next = cc_poly_dist.at<int>(curr_cc, next_cc);
+        int dist_to_prev = (int)cc_poly_dist.at<uchar>(curr_cc, prev_cc);
+        int dist_to_next = (int)cc_poly_dist.at<uchar>(curr_cc, next_cc);
         if (dist_to_prev > (dist_to_next * word_end_ratio) ) {
             if (l - 1 >= word_start) {
                 
@@ -662,9 +676,9 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         }
         
         else if (dist_to_next > (dist_to_prev * word_end_ratio)){
-//            vector<int> new_word;
+            //            vector<int> new_word;
             for(int num = word_start; num < l+1; num ++){
-                 new_word.push_back(cc_path[num]);
+                new_word.push_back(cc_path[num]);
             }
             word_start = l+1;
             words3.push_back(new_word);
@@ -674,16 +688,16 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             Point2f middle_point;
             middle_point = cv::Point2f((curr_center.x + next_center.x)/2, (curr_center.y + next_center.y)/2);
         }
-    
-   }
+        
+    }
     for(int num = word_start; num < sz; num ++){
         new_word.push_back(cc_path[num]);
     }
     words3.push_back(new_word);
     
-//    words_status.words = words3;
-//    words_status.length = {};
-//    words_status.dist_array = {};
+    //    words_status.words = words3;
+    //    words_status.length = {};
+    //    words_status.dist_array = {};
     
     if (0 == mergeFlag) {
         for (int i = 0; i < words3.size(); i ++) {
@@ -733,6 +747,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         
     }
 }
+
 
 //Get a table of word astatus and returns a new table of words after merges all possible words
 void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_cc_dist, cv::Mat &src_cc_ang, vector<WordsStatus> &dst_word_stat, cv::Mat &dst_cc_dist, cv::Mat &dst_cc_ang){
@@ -1039,12 +1054,12 @@ int TextDetector::min_array(int *a)
 
 
 //calculate the minimum Eucledian distance between two sets of pixels
-void TextDetector::min_px_dist(vector<cv::Point> &px1, vector<cv::Point> &px2, int &dist){
+void TextDetector::min_px_dist(cv::Mat &px1, cv::Mat &px2, int &dist){
     int min_dist = 9999;
-    for (int i = 0; i < px1.size(); i ++) {
-        for (int j = 0; j < px2.size(); j ++) {
-            int tmp_dist = sqrt( (px1[i].x - px2[j].x)*(px1[i].x - px2[j].x) +
-                                  (px1[i].y - px2[j].y)*(px1[i].y - px2[j].y));
+    for (int i = 0; i < px1.rows; i ++) {
+        for (int j = 0; j < px2.rows; j ++) {
+            int tmp_dist = sqrt( pow((px1.at<uchar>(i, 0) - px2.at<uchar>(j, 0)), 2) +
+                                 pow((px1.at<uchar>(i, 1) - px2.at<uchar>(j, 1)), 2) );
             if(tmp_dist < min_dist)
                 min_dist = tmp_dist;
         }
