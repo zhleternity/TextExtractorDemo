@@ -563,7 +563,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     vector<ComponentProperty> props = CCs.getComponentsProperties();
     int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
-    cv::Mat plot_pic= cv::Mat::zeros(sz, sz, CV_8U);
+    cv::Mat plot_pic= cv::Mat::ones(spine_th.size(), CV_8UC1);
     cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_64FC1);
     vector<vector<cv::Point>> cc_pixels;
     for(ComponentProperty &prop : props){
@@ -626,7 +626,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     int curr_cc = 0;
     vector<int> cc_path;
     int k = 0;
-    while (k < sz) {
+    while (k < sz -1) {
         double *data = cc_px_dist.ptr<double>(curr_cc);
 //        vector<int> data_row;
 //        for (int i = 0; i < sizeof(data); i ++) {
@@ -636,7 +636,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         double min_value = min_array(data);
         int next_cc = 0;
         for (int i = 0; i < sizeof(data); i ++) {
-            cout<<data[i]<<endl;
+//            cout<<data[i]<<endl;
             if(min_value == data[i]){
                 next_cc = i;
                 break;
