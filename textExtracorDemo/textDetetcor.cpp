@@ -560,10 +560,12 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 
     ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
     cv::Mat labels = CCs.apply(spine_th);
+    cv::Mat label = cv::Mat::zeros(spine_th.size() , CV_8UC1);
+    connectedComponents(spine_th, label);
     vector<ComponentProperty> props = CCs.getComponentsProperties();
     int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
-    cv::Mat plot_pic= cv::Mat::ones(spine_th.size(), CV_8UC1);
+    cv::Mat plot_pic(spine_th.size(), CV_8UC1, Scalar::all(255));
     cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_64FC1);
     vector<vector<cv::Point>> cc_pixels;
     for(ComponentProperty &prop : props){
@@ -653,9 +655,11 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         Point2f pt1,pt2;
         pt1 = cv::Point2f(cc_centers_vec[curr_cc].x, cc_centers_vec[curr_cc].y);
         pt2 = cv::Point2f(cc_centers_vec[next_cc].x, cc_centers_vec[next_cc].y);
-        line(plot_pic, pt1, pt2, Scalar(0,0,255));
+        circle(plot_pic, pt1, 5, Scalar(0,0,0));
+        circle(plot_pic, pt2, 5, Scalar(0,0,0));
+        line(plot_pic, pt1, pt2, Scalar(0,0,255),8);
         imshow("plot line", plot_pic);
-        waitKey();
+//        waitKey();
         cc_path.push_back(curr_cc);
         curr_cc = next_cc;
         k = k + 1;
@@ -713,6 +717,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         new_word.push_back(cc_path[num]);
     }
     words3.push_back(new_word);
+    new_word.clear();
     
     //    words_status.words = words3;
     //    words_status.length = {};
@@ -720,18 +725,25 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     
     if (0 == mergeFlag) {
         for (int i = 0; i < words3.size(); i ++) {
-            vector<int> curr_word  = words3[i];
-            words_status[i].words  = words3[i];
-            words_status[i].length = (int)words3[i].size();
-            for (int j = 0; j < curr_word.size(); j ++) {
-                int curr_sym = curr_word[j];
-                for (int k = 0; k < cc_pixels[curr_sym].size(); k ++)
-                    labels.at<int>(cc_pixels[curr_sym][k].x, cc_pixels[curr_sym][k].y) = i;
+//            vector<int> curr_word  = words3[i];
+            WordsStatus tmp;
+            tmp.words  = words3[i];
+            tmp.length = (int)words3[i].size();
+            words_status.push_back(tmp);
+            for (int j = 0; j < words3[i].size(); j ++) {
+                int curr_sym = words3[i][j];
+//                cout<<curr_sym<<endl;
+//                cout<<cc_pixels[curr_sym].size()<<endl;
+                for (int k = 0; k < cc_pixels[curr_sym].size(); k ++){
+                    cout<<cc_pixels[curr_sym][k].x<<","<<cc_pixels[curr_sym][k].y<<endl;
+                    label.at<int>(cc_pixels[curr_sym][k].x, cc_pixels[curr_sym][k].y) = i;
+                }
             }
             
         }
         cvtColor(labels, w_spine, CV_Lab2BGR);
         imshow("result words", w_spine);
+        waitKey();
         
     }
     else if (1 == mergeFlag){//merge words
