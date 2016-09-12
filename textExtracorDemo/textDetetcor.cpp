@@ -485,7 +485,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     }
     
     if (removeNoise) {
-        vector<vector<cv::Point2f>> contours;
+        vector<vector<cv::Point>> contours;
         imshow("spine_th", spine_th);
 //        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
