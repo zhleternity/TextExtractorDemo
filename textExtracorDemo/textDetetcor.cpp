@@ -487,6 +487,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
     if (removeNoise) {
         vector<vector<cv::Point>> contours;
         imshow("spine_th", spine_th);
+//        WriteData("/Users/eternity/Desktop/未命名文件夹/quantize1.txt", spine_th);
 //        waitKey();
         findContours(spine_th, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
 
@@ -498,8 +499,9 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             //compute solidity
             vector<vector<Point>> hull(1);
             convexHull( contours[i], hull[0] );
+            double convex_area = contourArea(hull[0]);
             /* ... I hope this is correct ... */
-            double solidity = bbox_area / contourArea( hull[0] );
+            double solidity = bbox_area / convex_area;
             
             for (int j = 0; j < contours[i].size(); j ++) {
                 if ( (rect.width > spineImage.cols / 1.001)
@@ -509,6 +511,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
                     || (bbox_aspect > 0.5 && bbox_aspect < 1.7 && solidity > 0.9) )
                     
                     spine_th.at<int>(contours[i][j].x, contours[i][j].y) = 0;
+//                WriteData("/Users/eternity/Desktop/未命名文件夹/quantize2.txt", spine_th);
             }
             
             
