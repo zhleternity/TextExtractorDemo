@@ -843,9 +843,13 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
     vector<vector<cv::Point>> contours;
     findContours(w_spine, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     vector<Point2f> centers;
+    vector<vector<cv::Point>> pixelIdx;
+    vector<cv::Rect> bboxes;
     for (int i = 0; i < contours.size(); i ++) {
         Moments moment = cv::moments(contours[i]);
         centers.push_back(getBlobCentroid(moment));
+        pixelIdx.push_back(contours[i]);
+        bboxes.push_back(boundingRect(contours[i]));
     }
     
     vector<WordsStatus> words;
@@ -868,11 +872,89 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
         float xdiff = abs(p1.x - p2.x);
         float ydiff = abs(p1.y - p2.y);
         if (xdiff > ydiff) {
-            words[i].
+            words[i].orientation = 1;//horizon orientation
+            if(p1.x > p2.x){
+                vector<int> flip_words;
+                flip(words[i].words, flip_words, 1);//flip-lr,horizon orientation
+                words[i].words = flip_words;
+                flip_words.clear();
+            }
+                
+        }
+        else{
+            words[i].orientation = 0;//vertical orientation
+            if (p1.y > p2.y) {
+                vector<int> flip_words;
+                flip(words[i].words, flip_words, 1);
+                words[i].words = flip_words;
+                flip_words.clear();
+            }
         }
     }
     
+    //assign difderent colors to different words and display the result
+    cv::Mat label;
+    connectedComponents(contours, label);
+    cv::Mat words_label = cv::Mat::zeros(label.size(), CV_8U);
+    int pad_size = 30;
+    cv::Mat words_pad;
+    padImage(w_spine, words_pad, Size(pad_size, pad_size), 2);
+    for (int i = 0; i < words.size(); i ++) {
+        vector<int> curr_word = words[i].words;
+        for (int j = 0; j < curr_word.size(); j ++) {
+            int curr_char = curr_word[j];
+            for (int num = 0; num < pixelIdx[curr_char].size(); num ++)
+                words_label.at<int>(pixelIdx[curr_char][num].x, pixelIdx[curr_char][num].y) = 1;
+        }
+        vector<vector<cv::Point>> cc;
+        findContours(words_label, cc, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+        vector<cv::Rect> bboxes;
+        for (int k = 0; k < cc.size(); k ++)
+            bboxes.push_back(boundingRect(cc[k]));
+        
+        cv::Mat words_img;
+        cvtColor(words_label, words_img, CV_GRAY2BGR);
+        cv::Mat word_img;
+        for (int num0 = 0; num0 < bboxes.size(); num0 ++) {
+            word_img = cv::Mat(words_img, bboxes[num0]);
+            cv::Mat word_img_pad;
+            padImage(word_img, word_img_pad, Size(5, 5), 2);
+            if(0 == words[i].orientation)
+                rotate
+        }
+        
+    }
+    
+    
     return out;
+}
+
+
+//pad the image
+void TextDetector::padImage(cv::Mat &image, cv::Mat &dst, Size sz, int pad_flag){
+    cv::Mat img = image.clone();
+    int i, j;
+    dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
+    switch (pad_flag) {
+        case 0://pad up-down
+            i = 2;
+            j = 0;
+            img.copyTo(cv::Mat(dst, cv::Rect(0, sz.height, img.cols, img.rows)));
+            break;
+        case 1://pad left-right
+            i = 0;
+            j = 2;
+            img.copyTo(cv::Mat(dst, cv::Rect(sz.width, 0, img.cols, img.rows)));
+            break;
+        case 2://pad both
+            i = 2;
+            j = 2;
+            img.copyTo(cv::Mat(dst, cv::Rect(sz.width, sz.height, img.cols, img.rows)));
+            
+        default:
+            break;
+    }
+    
 }
 
 

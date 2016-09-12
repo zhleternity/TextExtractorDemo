@@ -132,6 +132,7 @@ protected:
     float getBlobEccentricity( const Moments& moment ) ;
     Point2f getBlobCentroid( const Moments& moment ) ;
     double Round(double dVal, short iPlaces);
+    void padImage(cv::Mat &image, cv::Mat &dst, Size sz, int pad_flag);
 private:
     string imageDirectory;
     TextDetecorParams Detectorparams;
