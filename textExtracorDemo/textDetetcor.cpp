@@ -797,29 +797,82 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             vector<int> curr_word = words[k];
             for (int l = 0; curr_word.size(); l ++) {
                 int curr_sym = curr_word[l];
-                for (int num = 0; num < cc_pixels[curr_sym].size(); num ++)
+                for (int num = 0; num < cc_pixels[curr_sym].size(); num ++){
+//                    int idx;
+//                    if (k <= 10) {
+//                        idx = 200 + k;
+//                    }
+//                    else if (k > 10 && k <= 50 )
+//                        idx = 100 + k;
+//                    else if (k > 50 && k <= 100)
+//                        idx = 20 + k;
+//                    else
+//                        idx = k - 50;
+                    
                     labels.at<int>(cc_pixels[curr_sym][num].x, cc_pixels[curr_sym][num].y) = k;
+                }
+                
                 
             }
         }
         
         
-        cv::transpose(labels, labels);
-        flip(labels, labels, 0);
+//        cv::transpose(labels, labels);
+//        flip(labels, labels, 0);
         imshow("labels", labels);
         
         labels *= 1.0/255;
         cvtColor(labels, w_spine, CV_GRAY2BGR);
         imshow("result words", w_spine);
-        cvtColor(w_spine, w_spine, CV_BGR2HSV);
+        cvtColor(w_spine, w_spine, CV_BGR2Lab);
         imshow("hsv show", w_spine);
-        waitKey();
+//        waitKey();
 
         words_status = merge_word_stat;
         
         words.clear();
         
     }
+}
+
+
+//recognize the text
+string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_stats){
+    string out = "";
+    
+    vector<vector<cv::Point>> contours;
+    findContours(w_spine, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+    vector<Point2f> centers;
+    for (int i = 0; i < contours.size(); i ++) {
+        Moments moment = cv::moments(contours[i]);
+        centers.push_back(getBlobCentroid(moment));
+    }
+    
+    vector<WordsStatus> words;
+    int k = 0;
+    for (int i = 0; i < words_stats.size(); i ++) {
+        if(words_stats[i].length > 1){
+            words[k] = words_stats[i];
+            i = i + 1;
+        }
+    }
+    
+    //specify words orientation (horizon or vertical),and flip words if needed.
+    for (int i = 0; i < words.size(); i ++) {
+        vector<int> curr_word;
+        curr_word = words[i].words;
+        int first_char = curr_word[0];
+        int last_char = curr_word[curr_word.size() - 1];
+        Point2f p1 = centers[first_char];
+        Point2f p2 = centers[last_char];
+        float xdiff = abs(p1.x - p2.x);
+        float ydiff = abs(p1.y - p2.y);
+        if (xdiff > ydiff) {
+            words[i].
+        }
+    }
+    
+    return out;
 }
 
 

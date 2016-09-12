@@ -54,6 +54,7 @@ struct TextDetecorParams {
 struct WordsStatus {
     vector<int> words;
     int length;
+    int orientation;
     vector<int> dist_arr;
     vector<float> angle_arr;
     float dist_mean;
@@ -84,6 +85,7 @@ public:
     
     void segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool removeNoise);
     void findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<WordsStatus> &words_status);
+    string recognizeText(cv::Mat & w_spine, vector<WordsStatus> &words_stats);
 protected:
     //pre-processing
     cv::Mat preProcess(cv::Mat &image);
