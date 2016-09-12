@@ -916,17 +916,55 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
         cvtColor(words_label, words_img, CV_GRAY2BGR);
         cv::Mat word_img;
         for (int num0 = 0; num0 < bboxes.size(); num0 ++) {
+            Point2f mid = cv::Point2f(bboxes[num0].tl().x, bboxes[num0].tl().y) + cv::Point2f(0.5*bboxes[num0].width, 0.5*bboxes[num0].height);
             word_img = cv::Mat(words_img, bboxes[num0]);
             cv::Mat word_img_pad;
             padImage(word_img, word_img_pad, Size(5, 5), 2);
             if(0 == words[i].orientation)
-                rotate
+                ImageRotate(word_img_pad, mid, 90, 0);
+            
+            string ocr_result = ocr(word_img_pad);
+            out = strcat(<#char *#>, <#const char *#>)
         }
         
     }
     
     
     return out;
+}
+
+//call tesseract
+string TextDetector::ocr(cv::Mat &stroke_mat){
+    
+    tesseract::TessBaseAPI tessearct_api;
+    const char  *languagePath = "/usr/local/Cellar/tesseract/3.04.01_2/share/tessdata";
+    const char *languageType = "chi";
+    int nRet = tessearct_api.Init(languagePath, languageType,tesseract::OEM_DEFAULT);
+    if (nRet != 0) {
+        printf("初始化字库失败！");
+        return string("Please re-initialize the words library");
+    }
+    tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
+    tessearct_api.SetImage(stroke_mat.data, stroke_mat.cols, stroke_mat.rows, 1, stroke_mat.cols);
+    //    PIXA *pixa = pixaRead(img_path);
+    
+    //    string out = string(tessearct_api.GetUTF8Text());
+    
+    string out = string(tessearct_api.GetUTF8Text());
+    return out;
+
+}
+
+//rotate the inage with the Affine
+cv::Mat TextDetector::ImageRotate(cv::Mat & src, const Point2f &center, double angle,double scale)
+{
+    
+    cv::Mat M = getRotationMatrix2D(center, angle, scale);
+    
+    // rotate
+    cv::Mat dst;
+    warpAffine(src, dst, M, cvSize(src.cols, src.rows), CV_INTER_LINEAR);
+    return dst;
 }
 
 

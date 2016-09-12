@@ -133,6 +133,8 @@ protected:
     Point2f getBlobCentroid( const Moments& moment ) ;
     double Round(double dVal, short iPlaces);
     void padImage(cv::Mat &image, cv::Mat &dst, Size sz, int pad_flag);
+    cv::Mat ImageRotate(cv::Mat & src, const Point2f &center, double angle,double scale);
+    string ocr(cv::Mat &stroke_mat);
 private:
     string imageDirectory;
     TextDetecorParams Detectorparams;
