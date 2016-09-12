@@ -133,6 +133,7 @@ protected:
 private:
     string imageDirectory;
     TextDetecorParams Detectorparams;
+    double NaN = nan("not a number");
 };  /*  class TextDetector */
 
 

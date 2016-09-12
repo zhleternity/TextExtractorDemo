@@ -627,7 +627,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     cc_px_dist = cc_px_dist + transpose;
     WriteData("/Users/eternity/Desktop/未命名文件夹/3.txt", cc_px_dist);
     
-    double NaN = nan("not a number");
+    
     for (int i = 0; i < cc_px_dist.rows; i ++) {
         cc_px_dist.at<double>(i, i) = NaN;
 //        cout<<cc_px_dist.at<double>(i, i)<<endl;
@@ -650,7 +650,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         double min_value = min_array(data);
         int next_cc = 0;
         for (int i = 0; i < sizeof(data); i ++) {
-            cout<<data[i]<<endl;
+//            cout<<data[i]<<endl;
             if(min_value == data[i]){
                 next_cc = i;
                 break;
@@ -730,6 +730,12 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     }
     words3.push_back(new_word);
     new_word.clear();
+    for (int i = 0; i < words3.size(); i ++) {
+        WordsStatus tmp;
+        tmp.words = words3[i];
+        tmp.length = (int)words3[i].size();
+        words_status.push_back(tmp);
+    }
     
     //    words_status.words = words3;
     //    words_status.length = {};
@@ -778,7 +784,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         
         for (int i = 0; i < words_status.size(); i ++)
             getWordsStatus(words_status[i].words, cc_dist, cc_angles, words_status[i]);
-        vector<int> words_merged;
+        
         vector<WordsStatus> merge_word_stat;
         cv::Mat merge_dist_mat, merge_angle_mat;
         mergeWords(words_status, cc_dist, cc_angles, merge_word_stat, merge_dist_mat, merge_angle_mat);
@@ -797,6 +803,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             }
         }
         
+        
         cv::transpose(labels, labels);
         flip(labels, labels, 0);
         imshow("labels", labels);
@@ -809,6 +816,8 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         waitKey();
 
         words_status = merge_word_stat;
+        
+        words.clear();
         
     }
 }
@@ -842,6 +851,8 @@ void TextDetector::mergeWords(vector<WordsStatus> &src_word_stat, cv::Mat &src_c
             }
         }
     }
+    
+    words_cell_arr.clear();
     
     
 }
@@ -988,7 +999,7 @@ void TextDetector::word_dist_mat(vector<vector<int>> &words_arr, cv::Mat &cc_dis
         int *data = dist_mat.ptr<int>(i);
         for (int j = 0; j < dist_mat.cols; j ++) {
             if(i == j)
-                data[j] = NAN;
+                data[j] = NaN;
         }
     }
     
@@ -1041,7 +1052,7 @@ void TextDetector::word_angle_mat(vector<vector<int>> &words_arr, cv::Mat &cc_di
         int *data = ang_mat.ptr<int>(i);
         for (int j = 0; j < ang_mat.cols; j ++) {
             if(i == j)
-                data[j] = NAN;
+                data[j] = NaN;
         }
     }
     
@@ -1058,15 +1069,41 @@ void TextDetector::getWordsStatus(vector<int> &words, cv::Mat &cc_dist, cv::Mat 
     
     word_stat.words  = words;
     word_stat.length = sizeof(words);
-    word_stat.dist_arr = curr_dist_arr;
-    vector<float> dist_mean, dist_std, angle_mean, angle_std;
-    meanStdDev(curr_dist_arr, dist_mean, dist_std);
-    word_stat.dist_mean = dist_mean[0];
-    word_stat.dist_std = dist_std[0];
-    word_stat.angle_arr = curr_angle_arr;
-    meanStdDev(curr_angle_arr, angle_mean, angle_std);
-    word_stat.angle_mean = angle_mean[0];
-    word_stat.angle_std = angle_std[0];
+    
+    if (curr_dist_arr.size() < 2) {
+        word_stat.dist_arr = {};
+        word_stat.dist_mean = NaN;
+        word_stat.dist_std = NaN;
+    }
+    else{
+        word_stat.dist_arr = curr_dist_arr;
+        vector<float> dist_mean, dist_std;
+        meanStdDev(curr_dist_arr, dist_mean, dist_std);
+        word_stat.dist_mean = dist_mean[0];
+        word_stat.dist_std = dist_std[0];
+        
+        dist_std.clear();
+        dist_mean.clear();
+    }
+    
+    if (curr_angle_arr.size() < 2){
+        word_stat.angle_arr = {};
+        word_stat.angle_mean = NaN;
+        word_stat.angle_std = NaN;
+    }
+    else{
+        vector<float> angle_mean, angle_std;
+        word_stat.angle_arr = curr_angle_arr;
+        meanStdDev(curr_angle_arr, angle_mean, angle_std);
+        word_stat.angle_mean = angle_mean[0];
+        word_stat.angle_std = angle_std[0];
+        
+        angle_std.clear();
+        angle_mean.clear();
+    }
+    
+    curr_angle_arr.clear();
+    curr_dist_arr.clear();
     
     
 }
@@ -1075,7 +1112,7 @@ void TextDetector::get_dist_arr(vector<int> &word, cv::Mat &dist_mat, vector<int
     for (int k = 0; k < word.size() - 1; k ++) {
         int curr_char = word[k];
         int next_char = word[k+1];
-        dist_array[k] = dist_mat.at<int>(curr_char, next_char);
+        dist_array.push_back(dist_mat.at<int>(curr_char, next_char));
     }
 }
 
@@ -1083,7 +1120,7 @@ void TextDetector::get_angle_array(vector<int> &word, cv::Mat &angle_mat, vector
     for (int k = 0; k < word.size() - 1; k ++) {
         int curr_char = word[k];
         int next_char = word[k+1];
-        angle_array[k] = angle_mat.at<float>(curr_char, next_char);
+        angle_array.push_back(angle_mat.at<float>(curr_char, next_char));
     }
 }
 
