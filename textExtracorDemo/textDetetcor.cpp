@@ -497,7 +497,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
             int bbox_area = rect.width * rect.height;
             //compute solidity
             vector<vector<Point>> hull(1);
-            convexHull( contours[0], hull[0] );
+            convexHull( contours[i], hull[0] );
             /* ... I hope this is correct ... */
             double solidity = bbox_area / contourArea( hull[0] );
             
@@ -516,10 +516,10 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         
     }
     segSpine = spine_th;
-//    transpose(segSpine, segSpine);
-//    flip(segSpine, segSpine, 0);
+    transpose(segSpine, segSpine);
+    flip(segSpine, segSpine, 0);
     imshow("segspine", segSpine);
-//    waitKey();
+    waitKey();
     spine_th.release();
     
     
