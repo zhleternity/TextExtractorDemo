@@ -519,10 +519,10 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         
     }
     segSpine = spine_th;
-    transpose(segSpine, segSpine);
-    flip(segSpine, segSpine, 0);
+//    transpose(segSpine, segSpine);
+//    flip(segSpine, segSpine, 0);
     imshow("segspine", segSpine);
-    waitKey();
+//    waitKey();
     spine_th.release();
     
     
@@ -549,10 +549,11 @@ void TextDetector::imgQuantize(cv::Mat &src, cv::Mat &dst, double level){
 //find words
 void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine, vector<WordsStatus> &words_status){
     cv::Mat spine_th = seg_spine.clone();
-//    cv::Mat labels;
+    cv::Mat labels;
 //    spine_th.convertTo(spine_th, CV_8U);
-//    connectedComponents(spine_th, labels);
-//    
+    connectedComponents(spine_th, labels);
+    labels.convertTo(labels, CV_32F);
+//
     vector<vector<cv::Point>> ccs;
     vector<Point2f> centers;
     vector<vector<cv::Point>> pixelIdxList;
@@ -565,25 +566,26 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
         pixelIdxList.push_back(ccs[i]);
         
     }
-    
+    int sz = (int)ccs.size();
     
 
-    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
-    cv::Mat labels = CCs.apply(spine_th);
+//    ConnectedComponent CCs(Detectorparams.maxConnComponentNum, 8);
+//    cv::Mat labels = CCs.apply(spine_th);
 //    cv::Mat label = cv::Mat::zeros(spine_th.size() , CV_8UC1);
 //    connectedComponents(spine_th, label);
-    vector<ComponentProperty> props = CCs.getComponentsProperties();
-    int sz = (int)props.size();
+//    vector<ComponentProperty> props = CCs.getComponentsProperties();
+//    int sz = (int)props.size();
     vector<Point2f> cc_centers_vec;
     cv::Mat plot_pic(spine_th.size(), CV_8UC1, Scalar::all(255));
     cv::Mat cc_centers = cv::Mat::zeros(sz, 2, CV_64FC1);
     vector<vector<cv::Point>> cc_pixels;
-    for(ComponentProperty &prop : props){
-        cc_centers_vec.push_back(prop.centroid);
-        cc_pixels.push_back(prop.pixelIdxList);
-    }
-    
+//    for(ComponentProperty &prop : props){
+//        cc_centers_vec.push_back(prop.centroid);
+//        cc_pixels.push_back(prop.pixelIdxList);
+//    }
+    cc_centers_vec = centers;
     cc_centers = cv::Mat(cc_centers_vec);
+    cc_pixels = pixelIdxList;
     
     cv::Mat cc_px_dist = cv::Mat::zeros(Size(sz, sz), CV_64FC1);
     for (int i = 0; i < cc_px_dist.rows - 1; i ++) {
@@ -746,13 +748,24 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //                cout<<cc_pixels[curr_sym].size()<<endl;
                 for (int k = 0; k < cc_pixels[curr_sym].size(); k ++){
                     cout<<cc_pixels[curr_sym][k].x<<","<<cc_pixels[curr_sym][k].y<<endl;
+//                    if (<#condition#>) {
+//                        <#statements#>
+//                    }
                     labels.at<int>((int)cc_pixels[curr_sym][k].x, (int)cc_pixels[curr_sym][k].y) = i;
                 }
             }
             
         }
-        cvtColor(labels, w_spine, CV_Lab2BGR);
+        cv::transpose(labels, labels);
+        flip(labels, labels, 0);
+        imshow("labels", labels);
+//        waitKey();
+//        w_spine = cv::Mat::zeros(labels.size(), CV_8U);
+        labels *= 1.0/255;
+        cvtColor(labels, w_spine, CV_GRAY2BGR);
         imshow("result words", w_spine);
+        cvtColor(w_spine, w_spine, CV_BGR2HSV);
+        imshow("hsv show", w_spine);
         waitKey();
         
     }
@@ -783,7 +796,18 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
                 
             }
         }
-        cvtColor(labels, w_spine, CV_Lab2BGR);
+        
+        cv::transpose(labels, labels);
+        flip(labels, labels, 0);
+        imshow("labels", labels);
+        
+        labels *= 1.0/255;
+        cvtColor(labels, w_spine, CV_GRAY2BGR);
+        imshow("result words", w_spine);
+        cvtColor(w_spine, w_spine, CV_BGR2HSV);
+        imshow("hsv show", w_spine);
+        waitKey();
+
         words_status = merge_word_stat;
         
     }
