@@ -159,14 +159,15 @@ int main(int argc, const char * argv[]) {
     //get the candidate text region
 //    cv::Mat stroke_width(result.second.height, result.second.width, CV_8UC1, Scalar(0));
 //    cv::Mat(result.first, result.second).copyTo(stroke_width);
+    
 //    const char *img_path = "/Users/eternity/Documents/test/textExtracorDemo/out/stroke_width.jpg";
 //    imwrite(img_path, stroke_width);
-    int mergeFlag = 0;
-    cv::Mat w_spine;
-    vector<WordsStatus> words_stat;
-    detector.findWords(seg_spine, mergeFlag, w_spine, words_stat);
-    string out1 = detector.recognizeText(w_spine, words_stat);
-    cout<<"The result is: "<<out1<<endl;
+//    int mergeFlag = 0;
+//    cv::Mat w_spine;
+//    vector<WordsStatus> words_stat;
+//    detector.findWords(seg_spine, mergeFlag, w_spine, words_stat);
+//    string out1 = detector.recognizeText(w_spine, words_stat);
+//    cout<<"The result is: "<<out1<<endl;
     //use Tesseract to decipher the image
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;
@@ -178,7 +179,7 @@ int main(int argc, const char * argv[]) {
         return -1;
     }
     tessearct_api.SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
-    tessearct_api.SetImage(w_spine.data, w_spine.cols, w_spine.rows, 1, w_spine.cols);
+    tessearct_api.SetImage(seg_spine.data, seg_spine.cols, seg_spine.rows, 1, seg_spine.cols);
 //    tessearct_api.SetImage(stroke_width.data, stroke_width.cols, stroke_width.rows, 1, stroke_width.cols);
     //    PIXA *pixa = pixaRead(img_path);
     
@@ -212,10 +213,16 @@ int main(int argc, const char * argv[]) {
     
     //append the original and stroke width images together
 //    cvtColor(stroke_width, stroke_width, CV_GRAY2BGR);
-    cv::Mat append(image.rows, image.cols + w_spine.cols, CV_8UC3);
+    cvtColor(seg_spine, seg_spine, CV_GRAY2BGR);
+//    cv::Mat append(image.rows, image.cols + stroke_width.cols, CV_8UC3);
+    cv::Mat append(image.rows, image.cols + seg_spine.cols, CV_8UC3);
     image.copyTo(cv::Mat(append, cv::Rect(0,0, image.cols, image.rows)));
-    w_spine.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, w_spine.cols, w_spine.rows)));
+//    stroke_width.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, stroke_width.cols, stroke_width.rows)));
+    seg_spine.copyTo(cv::Mat(append, cv::Rect(image.cols, 0, seg_spine.cols, seg_spine.rows)));
     
+    
+    transpose(append, append);
+    flip(append, append, 0);
     imshow("appended", append);
     waitKey();
     

@@ -980,19 +980,20 @@ void TextDetector::padImage(cv::Mat &image, cv::Mat &dst, Size sz, int pad_flag)
         case 0://pad up-down
             i = 2;
             j = 0;
-            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
+            dst = cv::Mat::ones(Size(j * sz.width + img.cols, i * sz.height + img.rows), CV_8UC1);
             img.copyTo(cv::Mat(dst, cv::Rect(0, sz.height, img.cols, img.rows)));
             break;
         case 1://pad left-right
             i = 0;
             j = 2;
-            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
+            dst = cv::Mat::ones(Size(j * sz.width + img.cols, i * sz.height + img.rows), CV_8UC1);
             img.copyTo(cv::Mat(dst, cv::Rect(sz.width, 0, img.cols, img.rows)));
             break;
         case 2://pad both
             i = 2;
             j = 2;
-            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
+            dst = cv::Mat::ones(Size(j * sz.width + img.cols, i * sz.height + img.rows), CV_8UC1);
+            
             img.copyTo(cv::Mat(dst, cv::Rect(sz.width, sz.height, img.cols, img.rows)));
             
         default:
