@@ -161,10 +161,12 @@ int main(int argc, const char * argv[]) {
 //    cv::Mat(result.first, result.second).copyTo(stroke_width);
 //    const char *img_path = "/Users/eternity/Documents/test/textExtracorDemo/out/stroke_width.jpg";
 //    imwrite(img_path, stroke_width);
-    int mergeFlag = 1;
+    int mergeFlag = 0;
     cv::Mat w_spine;
     vector<WordsStatus> words_stat;
     detector.findWords(seg_spine, mergeFlag, w_spine, words_stat);
+    string out1 = detector.recognizeText(w_spine, words_stat);
+    cout<<"The result is: "<<out1<<endl;
     //use Tesseract to decipher the image
     double t = getTickCount();
     tesseract::TessBaseAPI tessearct_api;

@@ -552,7 +552,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
     cv::Mat labels;
 //    spine_th.convertTo(spine_th, CV_8U);
     connectedComponents(spine_th, labels);
-    labels.convertTo(labels, CV_32F);
+    labels.convertTo(labels, CV_8U);
 //
     vector<vector<cv::Point>> ccs;
     vector<Point2f> centers;
@@ -762,17 +762,18 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
             }
             
         }
-        cv::transpose(labels, labels);
-        flip(labels, labels, 0);
+//        cv::transpose(labels, labels);
+//        flip(labels, labels, 0);
         imshow("labels", labels);
+        w_spine = labels;
 //        waitKey();
 //        w_spine = cv::Mat::zeros(labels.size(), CV_8U);
-        labels *= 1.0/255;
-        cvtColor(labels, w_spine, CV_GRAY2BGR);
-        imshow("result words", w_spine);
-        cvtColor(w_spine, w_spine, CV_BGR2HSV);
-        imshow("hsv show", w_spine);
-        waitKey();
+//        labels *= 1.0/255;
+//        cvtColor(labels, w_spine, CV_GRAY2BGR);
+//        imshow("result words", w_spine);
+//        cvtColor(w_spine, w_spine, CV_BGR2HSV);
+//        imshow("hsv show", w_spine);
+//        waitKey();
         
     }
     else if (1 == mergeFlag){//merge words
@@ -820,12 +821,12 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 //        cv::transpose(labels, labels);
 //        flip(labels, labels, 0);
         imshow("labels", labels);
-        
-        labels *= 1.0/255;
-        cvtColor(labels, w_spine, CV_GRAY2BGR);
-        imshow("result words", w_spine);
-        cvtColor(w_spine, w_spine, CV_BGR2Lab);
-        imshow("hsv show", w_spine);
+        w_spine = labels;
+//        labels *= 1.0/255;
+//        cvtColor(labels, w_spine, CV_GRAY2BGR);
+//        imshow("result words", w_spine);
+//        cvtColor(w_spine, w_spine, CV_BGR2Lab);
+//        imshow("hsv show", w_spine);
 //        waitKey();
 
         words_status = merge_word_stat;
@@ -838,7 +839,7 @@ void TextDetector::findWords(cv::Mat &seg_spine, int mergeFlag, cv::Mat &w_spine
 
 //recognize the text
 string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_stats){
-    string out = "";
+    char *out = new char[200];
     
     vector<vector<cv::Point>> contours;
     findContours(w_spine, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
@@ -856,8 +857,8 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
     int k = 0;
     for (int i = 0; i < words_stats.size(); i ++) {
         if(words_stats[i].length > 1){
-            words[k] = words_stats[i];
-            i = i + 1;
+            words.push_back(words_stats[i]);
+            k = k + 1;
         }
     }
     
@@ -894,7 +895,7 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
     
     //assign difderent colors to different words and display the result
     cv::Mat label;
-    connectedComponents(contours, label);
+    connectedComponents(w_spine, label);
     cv::Mat words_label = cv::Mat::zeros(label.size(), CV_8U);
     int pad_size = 30;
     cv::Mat words_pad;
@@ -924,13 +925,15 @@ string TextDetector::recognizeText(cv::Mat &w_spine, vector<WordsStatus> &words_
                 ImageRotate(word_img_pad, mid, 90, 0);
             
             string ocr_result = ocr(word_img_pad);
-            out = strcat(<#char *#>, <#const char *#>)
+            const char *ch = ocr_result.c_str();
+            out = strcat(out, ch);
         }
         
     }
     
-    
-    return out;
+    string string_result = string(out);
+//    cout<<string_result<<endl;
+    return string_result;
 }
 
 //call tesseract
@@ -972,21 +975,24 @@ cv::Mat TextDetector::ImageRotate(cv::Mat & src, const Point2f &center, double a
 void TextDetector::padImage(cv::Mat &image, cv::Mat &dst, Size sz, int pad_flag){
     cv::Mat img = image.clone();
     int i, j;
-    dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
+    
     switch (pad_flag) {
         case 0://pad up-down
             i = 2;
             j = 0;
+            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
             img.copyTo(cv::Mat(dst, cv::Rect(0, sz.height, img.cols, img.rows)));
             break;
         case 1://pad left-right
             i = 0;
             j = 2;
+            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
             img.copyTo(cv::Mat(dst, cv::Rect(sz.width, 0, img.cols, img.rows)));
             break;
         case 2://pad both
             i = 2;
             j = 2;
+            dst = cv::Mat::ones(Size(i * sz.height + img.rows, j * sz.width + img.cols), CV_8U);
             img.copyTo(cv::Mat(dst, cv::Rect(sz.width, sz.height, img.cols, img.rows)));
             
         default:
