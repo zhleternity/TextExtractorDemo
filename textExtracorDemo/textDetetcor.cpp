@@ -403,7 +403,7 @@ void TextDetector::segmentText(cv::Mat &spineImage, cv::Mat &segSpine, bool remo
         double cut_from_r = window_h * i;
         double cut_to_r = window_h * (i+1);
         cv::Mat window_img = cv::Mat::zeros(Size(cut_to_r-cut_from_r + 1, window_w), CV_8U);
-        cv::Rect rect = cv::Rect(0, cut_from_r, window_w - 1, cut_to_r - cut_from_r + 1);
+        cv::Rect rect = cv::Rect(0, cut_from_r, window_w-1, cut_to_r - cut_from_r + 1);
 //        getROI(spineGray, window_img, rect);
         window_img = cv::Mat(spineGray, rect);
         imshow("window section", window_img);

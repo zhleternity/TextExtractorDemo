@@ -130,7 +130,7 @@ int main(int argc, const char * argv[]) {
     
         
     
-    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/books/book10.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
+    cv::Mat image = imread("/Users/eternity/Documents/study/studyResource /cv/bovw/test image/books/book15.jpg");//("/Users/eternity/Documents/study/Identification of Spine(new)/query/book15.jpg");
     
     TextDetecorParams params;
     params.minMSERArea = 150;
