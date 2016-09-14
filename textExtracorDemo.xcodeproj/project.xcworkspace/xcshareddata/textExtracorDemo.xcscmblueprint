@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "3A7084F1D60EA91F72E5DFC374106A64EFA6DC38",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "3A7084F1D60EA91F72E5DFC374106A64EFA6DC38" : 0,
+    "948F5A9B2C82CD15057623AEA664329AE82693B7" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "F9B14B66-64E0-4E8B-AD5C-56AB8402B8F9",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "3A7084F1D60EA91F72E5DFC374106A64EFA6DC38" : "TextExtractorDemo\/",
+    "948F5A9B2C82CD15057623AEA664329AE82693B7" : ""
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "textExtracorDemo",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "textExtracorDemo.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:zhleternity\/TextExtractorDemo.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "3A7084F1D60EA91F72E5DFC374106A64EFA6DC38"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:beautifulreading\/ling.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "948F5A9B2C82CD15057623AEA664329AE82693B7"
+    }
+  ]
+}
