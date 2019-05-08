@@ -1,0 +1,2 @@
+# TextExtractorDemo
+基于Tesseract和OpenCV实现的文字提取，项目可直接在Xcode上运行，如果需要在Visual Studio上运行需要重新新建项目，将源文件添加进去即可。
